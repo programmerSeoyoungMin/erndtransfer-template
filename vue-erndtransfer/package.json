@@ -1,8 +1,8 @@
 {
   "name": "vue-element-admin",
   "version": "4.4.0",
-  "description": "A magical vue admin. An out-of-box UI solution for enterprise applications. Newest development stack of vue. Lots of awesome features",
-  "author": "Pan <panfree23@gmail.com>",
+  "description": "vue admin template apply",
+  "author": "anyfive",
   "scripts": {
     "dev": "vue-cli-service serve",
     "lint": "eslint --ext .js,.vue src",
@@ -17,7 +17,7 @@
   "dependencies": {
     "axios": "0.18.1",
     "clipboard": "2.0.4",
-    "codemirror": "5.45.0",
+    "codemirror": "5.45.0", 
     "core-js": "3.6.5",
     "driver.js": "0.9.5",
     "dropzone": "5.5.1",

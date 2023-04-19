@@ -9,7 +9,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000") //Vue.js Client URL Server의 주소
+                .allowedOrigins("http://localhost:9527") //Vue.js Client URL Server의 주소
                 .allowCredentials(true);
     }
 }
