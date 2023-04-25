@@ -2,8 +2,10 @@
   <div class="app-container">
     <div class="filter-container">
 
-      <span style="font-size:x-large; font-weight: bold">{{ gridName }}</span><span> 총 {{ dataList.length }} / {{ dataList.length }} 건 </span>
-      <el-select v-model="rowLimit" size="small" @change="$emit('onRowLimitSelect', rowLimit)">
+      <span v-show="rowLimit > 0">
+        <span style="font-size:x-large; font-weight: bold">{{ gridName }}</span><span> 총 {{ dataList.length }} / {{ dataList.length }} 건 </span>
+      </span>
+      <el-select v-show="rowLimit > 0" v-model="rowLimit" size="small" @change="$emit('onRowLimitSelect', rowLimit)">
         <el-option
           v-for="item in options"
           :key="item"
@@ -13,6 +15,9 @@
       </el-select>
 
       <div style="float: right;">
+        <el-button v-show="deleteBtn" type="danger" class="filter-item" plain @click="$emit('onDeleteBtnClick')">
+          <i class="el-icon-delete-solid" /> 데이터삭제
+        </el-button>
         <el-button v-show="dataMapBtn" type="primary" class="filter-item" plain @click="$emit('onDataMapBtnClick')">
           <i class="el-icon-document" /> 데이터정제
         </el-button>
@@ -27,7 +32,8 @@
       <el-table v-show="!useCheckbox" v-loading="listLoading" :data="dataList" border highlight-current-row style="width: 100%;" @current-change="rowSelect">
         <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
           <template v-slot="{row}">
-            <span>{{ row[header.key] }}</span>
+            <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
+            <span v-else>{{ row[header.key] }}</span>
           </template>
         </el-table-column>
         <slot name="rows" />
@@ -68,6 +74,18 @@ export default {
       type: Boolean,
       default: true
     },
+    useCheckbox: {
+      type: Boolean,
+      default: false
+    },
+    deleteBtn: {
+      type: Boolean,
+      default: false
+    },
+    dataMapBtn: {
+      type: Boolean,
+      default: false
+    },
     excelUpload: {
       type: Boolean,
       default: false
@@ -76,17 +94,9 @@ export default {
       type: Boolean,
       default: false
     },
-    dataMapBtn: {
-      type: Boolean,
-      default: false
-    },
-    useCheckbox: {
-      type: Boolean,
-      default: false
-    },
     rowLimit: {
       type: Number,
-      default: 10
+      default: 0
     },
     options: {
       type: Array,

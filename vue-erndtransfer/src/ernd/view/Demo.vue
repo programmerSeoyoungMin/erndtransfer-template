@@ -44,6 +44,7 @@
     <!-- data-list(required) : 데이터 목록. 적용 방법은 아래 dataList 참조 -->
     <!-- list-loading : (테이블) 로딩중 true, 로딩완료 false -->
     <!-- use checkbox : 첫번째 열에 checkbox row 생성 -->
+    <!-- delete btn : row 삭제 버튼 생성 -->
     <!-- data map btn : 데이터 정제 버튼 생성 -->
     <!-- excel upload : 엑셀 업로드 버튼 생성 -->
     <!-- excel download : 엑셀 다운로드 버튼 생성 -->
@@ -55,13 +56,15 @@
       :headers="headers"
       :data-list="dataList"
       :list-loading="listLoading"
-      :use-checkbox="true"
+      :use-checkbox="false"
+      :delete-btn="true"
       :data-map-btn="true"
       :excel-upload="true"
       :excel-download="true"
       :row-limit="pager.limit"
       @onRowSelect="rowSelect"
       @onRowLimitSelect="setRowLimit"
+      @onDeleteBtnClick="deleteBtnClick"
       @onDataMapBtnClick="dataMapBtnClick"
       @onExcelUploadClick="excelUploadClick"
       @onExcelDownloadClick="excelDownloadClick"
@@ -107,7 +110,7 @@ export default {
         { key: 'name', name: '내역사업명', width: '500' }
       ],
       dataList: [
-        { no: '1', year: '2017', program: 'B001687', unit: 'B009873', detail: 'B034736', ernd: 'S2A5A2A01', iris: 'NR50081', name: '중견연구자지원사업_유형' },
+        { no: '1', year: '2017', program: 'B001687', unit: 'B009873', detail: 'B034736', ernd: 'S2A5A2A01', iris: 'NR50081', name: '중견연구자지원사업_유형', errorYn: 'Y' },
         { no: '2', year: '2017', program: 'B001687', unit: 'B009873', detail: 'B034736', ernd: 'S2A5A2A01', iris: 'NR50081', name: '중견연구자지원사업_유형' },
         { no: '3', year: '2017', program: 'B001687', unit: 'B009873', detail: 'B034736', ernd: 'S2A5A2A01', iris: 'NR50081', name: '중견연구자지원사업_유형' },
         { no: '4', year: '2017', program: 'B001687', unit: 'B009873', detail: 'B034736', ernd: 'S2A5A2A01', iris: 'NR50081', name: '중견연구자지원사업_유형' },
@@ -140,6 +143,14 @@ export default {
     },
     excelDownloadClick() {
       this.$alert('엑셀 다운로드 버튼 클릭', '엑셀 다운로드')
+    },
+    deleteBtnClick() {
+      if (this.selectedRow === undefined || this.selectedRow === null) {
+        this.$alert('삭제할 row를 선택하세요.', '삭제')
+        return
+      }
+
+      if (Array.isArray(this.selectedRow)) { this.selectedRow.forEach((element) => this.dataList.splice(this.dataList.findIndex((value) => value.no === element.no), 1)) } else { this.dataList.splice(this.dataList.findIndex((value) => value.no === this.selectedRow.no), 1) }
     }
   }
 }
