@@ -15,8 +15,8 @@
       </el-select>
 
       <div style="float: right;">
-        <el-button v-show="deleteBtn" type="danger" class="filter-item" plain @click="$emit('onDeleteBtnClick')">
-          <i class="el-icon-delete-solid" /> 데이터삭제
+        <el-button v-show="deleteBtn" type="danger" class="filter-item" plain @click="deleteBtnClick">
+          <i class="el-icon-delete-solid" /> 행삭제
         </el-button>
         <el-button v-show="dataMapBtn" type="primary" class="filter-item" plain @click="$emit('onDataMapBtnClick')">
           <i class="el-icon-document" /> 데이터정제
@@ -107,12 +107,21 @@ export default {
   },
   data() {
     return {
-      tableRef: null
+      selectedRow: null
     }
   },
   methods: {
     rowSelect(row) {
-      this.$emit('onRowSelect', row)
+      this.selectedRow = row
+      this.$emit('onRowSelect', this.selectedRow)
+    },
+    deleteBtnClick() {
+      if (this.selectedRow === undefined || this.selectedRow === null) {
+        this.$alert('삭제할 행을 선택하세요.', '삭제')
+        return
+      }
+
+      if (Array.isArray(this.selectedRow)) { this.selectedRow.forEach((element) => this.dataList.splice(this.dataList.findIndex((value) => value.no === element.no), 1)) } else { this.dataList.splice(this.dataList.findIndex((value) => value.no === this.selectedRow.no), 1) }
     }
   }
 }

@@ -143,14 +143,6 @@ export default {
     },
     excelDownloadClick() {
       this.$alert('엑셀 다운로드 버튼 클릭', '엑셀 다운로드')
-    },
-    deleteBtnClick() {
-      if (this.selectedRow === undefined || this.selectedRow === null) {
-        this.$alert('삭제할 row를 선택하세요.', '삭제')
-        return
-      }
-
-      if (Array.isArray(this.selectedRow)) { this.selectedRow.forEach((element) => this.dataList.splice(this.dataList.findIndex((value) => value.no === element.no), 1)) } else { this.dataList.splice(this.dataList.findIndex((value) => value.no === this.selectedRow.no), 1) }
     }
   }
 }
