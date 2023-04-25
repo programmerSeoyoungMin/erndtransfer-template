@@ -121,6 +121,19 @@ export const constantRoutes = [
         meta: { title: 'Profile', icon: 'user', noCache: true }
       }
     ]
+  },
+  {
+    path: '/demo',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: '/demo',
+        component: () => import('@/ernd/view/Demo.vue'),
+        name: 'Demo',
+        meta: { title: 'Demo', icon: 'user', noCache: true }
+      }
+    ]
   }
 ]
 
