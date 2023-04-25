@@ -3,7 +3,7 @@
     <div class="filter-container">
 
       <span v-show="rowLimit > 0">
-        <span style="font-size:x-large; font-weight: bold">{{ gridName }}</span><span> 총 {{ dataList.length }} / {{ dataList.length }} 건 </span>
+        <span style="font-size:x-large; font-weight: bold">{{ gridName }}</span><span> 총 {{ dataList.length > rowLimit ? rowLimit : dataList.length }} / {{ dataList.length }} 건 </span>
       </span>
       <el-select v-show="rowLimit > 0" v-model="rowLimit" size="small" @change="$emit('onRowLimitSelect', rowLimit)">
         <el-option
