@@ -395,6 +395,18 @@ export const asyncRoutes = [
       }
     ]
   },
+  {
+    path: '/ernd',
+    component: Layout,
+    children: [
+      {
+        path: 'excel',
+        component: () => import('@/ernd/view/ModalDemo'),
+        name: 'excelIndex',
+        meta: { title: 'Excel Upload', icon: 'excel', noCache: true }
+      }
+    ]
+  },
 
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }

@@ -129,9 +129,9 @@ export default {
     // window.addEventListener('storage', this.afterQRScan)
     // eslint-disable-next-line
     const URL = 'http://localhost:8080/test/selectTest'
-                axios.get(`${URL}`).then(result => {
-                    console.log(result.data)
-                }) 
+    axios.get(`${URL}`).then(result => {
+      console.log(result.data)
+    })
   },
   mounted() {
     if (this.loginForm.username === '') {

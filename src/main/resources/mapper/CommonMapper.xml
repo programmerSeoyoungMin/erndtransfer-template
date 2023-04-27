@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.CommonMapper">
+
+ 
+    <select id="retriveHeaderList" resultType="HeaderDto" parameterType="HeaderDto">      
+      <if test="includeErrorFieldYn != null and includeErrorFieldYn != '' and includeErrorFieldYn = 'Y'">
+        SELECT 
+          'errorMsg' AS KEY 
+          ,'오류구분' AS NAME
+          ,'100px' AS WIDTH
+        FROM
+          DUAL
+        UNION ALL
+        SELECT 
+          'uploadDe' AS KEY 
+          ,'uploadDe' AS NAME
+          ,'0px' AS WIDTH
+        FROM
+          DUAL
+        UNION ALL
+        SELECT 
+          'uploadFileNm' AS KEY 
+          ,'uploadFileNm' AS NAME
+          ,'0px' AS WIDTH
+        FROM
+          DUAL
+        UNION ALL
+        SELECT 
+          'excelRowNum' AS KEY 
+          ,'excelRowNum' AS NAME
+          ,'0px' AS WIDTH
+        FROM
+          DUAL
+        UNION ALL
+      </if>
+      SELECT
+        LOWER(SUBSTR(CAMEL_COLUMN_NAME, 1, 1)) || SUBSTR(CAMEL_COLUMN_NAME, 2) AS KEY 
+        ,COMMENTS AS NAME
+        ,(LENGTH(COMMENTS) * 14)+30 || 'px' AS WIDTH
+      FROM
+        (
+        SELECT
+          REPLACE(INITCAP(REPLACE(COLUMN_NAME, '_', ' ')), ' ') AS CAMEL_COLUMN_NAME,
+          (
+          SELECT
+            NVL(COMMENTS,COLUMN_NAME) 
+          FROM
+            ALL_COL_COMMENTS T
+          WHERE
+            T.TABLE_NAME = A.TABLE_NAME
+            AND T.COLUMN_NAME = A.COLUMN_NAME) AS COMMENTS
+        FROM
+          ALL_TAB_COLS A
+        WHERE
+          TABLE_NAME = 'IRIS_'||'${gbn}'||'_MAP'
+          AND COLUMN_NAME NOT IN 
+          <foreach collection="excludeColumns" item="column" separator=" , " open=" ( " close=" )">
+            #{column}
+          </foreach>
+       
+        ORDER BY
+          COLUMN_ID
+      )
+    </select>
+
+</mapper>
