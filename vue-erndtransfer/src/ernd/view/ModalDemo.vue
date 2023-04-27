@@ -10,7 +10,7 @@
       :excel-data-list="excelDataList"
       :list-loading="listLoading"
       :exclude="'NO'"
-      :includeErrorFieldYn="'Y'"
+      :include-error-field-yn="'Y'"
       @onUploadBtnClick="uploadBtnClick"
       @onDownloadBtnClick="downloadBtnClick"
       @onSaveBtnClick="saveBtnClick"
@@ -30,7 +30,7 @@ export default {
   data() {
     return {
       showModal: false,
-      excelDataList:[],
+      excelDataList: [],
       listLoading: false
     }
   },
@@ -39,7 +39,7 @@ export default {
 
     },
     retriveBsnsTempList() {
-      
+
     },
     uploadBtnClick(file) {
       this.listLoading = true
@@ -57,7 +57,7 @@ export default {
       }
       Axios.post('http://localhost:8080/excel/upload', formData, config)
         .then(response => {
-          //Axios config setting
+          // Axios config setting
           Axios.get('http://localhost:8080/bsns/retriveBsnsTempList')
             .then(response => {
               console.log(response.data)
@@ -77,7 +77,6 @@ export default {
         .finally(() => {
           this.listLoading = false
         })
-
     },
     saveBtnClick() {
       this.$alert('저장 버튼 클릭2222')

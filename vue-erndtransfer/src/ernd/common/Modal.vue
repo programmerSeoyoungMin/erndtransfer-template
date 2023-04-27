@@ -57,15 +57,15 @@ export default {
   },
   methods: {
     closeModal() {
-      if(this.closeFlag){
-        this.$emit('close') 
-      }else{
+      if (this.closeFlag) {
+        this.$emit('close')
+      } else {
         this.$alert('저장 후 닫기를 해주세요.', '알림', {
           confirmButtonText: '확인',
           callback: action => {
-            return false;
+            return false
           }
-        });
+        })
       }
     },
     handleMouseDown(event) {

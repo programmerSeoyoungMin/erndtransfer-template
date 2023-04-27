@@ -56,7 +56,7 @@ export default {
       type: String,
       default: ''
     },
-    excelDataList:{
+    excelDataList: {
       type: Array,
       default: []
     },
@@ -71,7 +71,7 @@ export default {
     includeErrorFieldYn: {
       type: String,
       default: 'N'
-    },
+    }
   },
   data() {
     return {
@@ -94,7 +94,7 @@ export default {
     const headerDto = {
       gbn: this.gbn,
       exclude: this.exclude,
-      includeErrorFieldYn:this.includeErrorFieldYn //오류구분 포함여부
+      includeErrorFieldYn: this.includeErrorFieldYn // 오류구분 포함여부
     }
     Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
       .then(response => {
@@ -105,7 +105,7 @@ export default {
       })
   },
   methods: {
-    closeBtnClick(){
+    closeBtnClick() {
       this.$emit('close')
     },
     handleFiles(files) {
@@ -125,8 +125,8 @@ export default {
       }
     },
     handleDrop(event) {
-      event.preventDefault()
-      const file = event.dataTransfer.files[0]
+      // event.preventDefault()
+      // const file = event.dataTransfer.files[0]
       // do something with the file, e.g. read its contents with a library like SheetJS
     },
     handleUpload() {
@@ -148,7 +148,7 @@ export default {
           'fas': true,
           'fa-check': true
         }
-        this.closeFlag = false;
+        this.closeFlag = false
       }
     },
     handleDownload() {
@@ -157,8 +157,8 @@ export default {
     },
     saveBtnClick() {
       this.$emit('onSaveBtnClick')
-      //if save end
-      this.closeFlag = true;
+      // if save end
+      this.closeFlag = true
     },
     deleteBtnClick() {
       this.$emit('onDeleteBtnClick')
