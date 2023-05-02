@@ -120,9 +120,6 @@
     
     
     <insert id="registBsns" parameterType="BsnsDto">
-      <selectKey resultType="int" keyProperty="no" order="BEFORE">
-        SELECT MAX(NO) FROM IRIS_BSNS_CD_MAP
-      </selectKey>
       INSERT INTO IRIS_BSNS_CD_MAP
       (
         NO,
@@ -168,7 +165,7 @@
         Z1
       ) VALUES
       (
-        ${no},
+        (SELECT NVL(MAX(NO),0)+1 FROM IRIS_BSNS_CD_MAP),
         #{seleYy},
         #{erndBsnsCd},
         #{seleYyBsnsCd},

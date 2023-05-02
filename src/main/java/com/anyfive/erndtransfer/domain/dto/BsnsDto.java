@@ -1,6 +1,7 @@
 package com.anyfive.erndtransfer.domain.dto;
 
 import org.apache.ibatis.type.Alias;
+import org.springframework.lang.Nullable;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import lombok.Setter;
 @Alias("BsnsDto")
 @RequiredArgsConstructor
 public class BsnsDto {
-  private int no;
+  private String no;
   private String seleYy;
   private String erndBsnsCd;
   private String seleYyBsnsCd;

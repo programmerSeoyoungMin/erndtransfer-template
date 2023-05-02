@@ -36,7 +36,18 @@ export default {
   },
   methods: {
     downloadBtnClick() {
-
+      //fileName 파라미터에 다운로드 될 파일명을 입력함.
+      const downloadUrl = 'http://localhost:8080/file/download?fileName=BSNS_CD.xlsx'
+      Axios.get(downloadUrl, {
+        responseType: 'blob' // 응답 데이터 타입
+      }).then(response => {
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', '사업코드서식파일.xlsx') // 다운로드될 파일이름
+        document.body.appendChild(link)
+        link.click()
+      })
     },
     retriveBsnsTempList() {
 
@@ -79,7 +90,19 @@ export default {
         })
     },
     saveBtnClick() {
-      this.$alert('저장 버튼 클릭2222')
+      const result = true
+      Axios.post('http://localhost:8080/bsns/saveBsnsList', this.excelDataList)
+        .then(response => {
+          console.log(response.data)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+        .finally(() => {
+          this.listLoading = false
+        }
+      )
+      return result
     }
   }
 }

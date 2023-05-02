@@ -1,7 +1,5 @@
 package com.anyfive.erndtransfer.domain.dto;
 
-import java.util.ArrayList;
-
 import org.apache.ibatis.type.Alias;
 
 import lombok.Getter;

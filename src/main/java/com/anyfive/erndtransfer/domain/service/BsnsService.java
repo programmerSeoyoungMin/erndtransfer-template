@@ -34,4 +34,10 @@ public class BsnsService {
     bsnsMapper.registBsnsTemp(dto);
   }
 
+  public void saveBsnsList(List<BsnsDto> bsnsDtoList) {
+    for(BsnsDto bsnsDto : bsnsDtoList) {
+      bsnsMapper.registBsns(bsnsDto);
+    }
+  }
+
 }

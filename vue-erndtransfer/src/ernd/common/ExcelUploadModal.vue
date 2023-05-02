@@ -89,7 +89,8 @@ export default {
       closeFlag: true,
       // Grid
       headers: [],
-      dataList: []
+      dataList: [],
+      saveFlag: false
     }
   },
   mounted() {
@@ -127,24 +128,18 @@ export default {
       }
     },
     handleDrop(event) {
-      // event.preventDefault()
-      // const file = event.dataTransfer.files[0]
-      // do something with the file, e.g. read its contents with a library like SheetJS
+      
     },
     handleUpload() {
-      // handle the upload button click event
-      // when spin start upload , and change img
+      
       this.classObject = {
         'fas': true,
         'fa-spinner': true,
         'fa-spin': true
       }
-      // get input file
       const file = this.$refs.fileInput.files[0]
-      console.log(file)
-      // send file to parent component
+      // upload를 위해, file 객체 부모 컴포넌트로 전달.
       const result = this.$emit('onUploadBtnClick', file)
-
       if (result) {
         this.classObject = {
           'fas': true,
@@ -154,13 +149,37 @@ export default {
       }
     },
     handleDownload() {
-      // handle the download button click event
       this.$emit('onDownloadBtnClick')
     },
     saveBtnClick() {
-      this.$emit('onSaveBtnClick')
-      // if save end
-      this.closeFlag = true
+      this.saveFlag = true
+      
+      if (this.excelDataList.length === 0) {
+        this.$alert('저장할 데이터가 없습니다.')
+        this.saveFlag = false
+      } else {
+        for (let i = 0; i < this.excelDataList.length; i++) {
+          if (this.excelDataList[i].errorYn == 'Y') {
+            this.$alert('저장할 수 없는 데이터가 존재합니다.')
+            this.saveFlag = false
+            break
+          }
+        }
+      } 
+      
+      if(this.saveFlag){
+        const result = this.$emit('onSaveBtnClick')  
+        if(result){
+          this.closeFlag = true
+          if(confirm('저장되었습니다. 창을 닫으시겠습니까?')){
+            this.excelDataList = []
+            this.closeBtnClick()
+          }
+        }else{
+          this.closeFlag = false
+        }
+      }
+      
     },
     deleteBtnClick() {
       this.$emit('onDeleteBtnClick')
