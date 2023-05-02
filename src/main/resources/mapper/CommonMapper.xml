@@ -10,27 +10,9 @@
           'errorMsg' AS KEY 
           ,'오류구분' AS NAME
           ,'100px' AS WIDTH
-        FROM
-          DUAL
-        UNION ALL
-        SELECT 
-          'uploadDe' AS KEY 
-          ,'uploadDe' AS NAME
-          ,'0px' AS WIDTH
-        FROM
-          DUAL
-        UNION ALL
-        SELECT 
-          'uploadFileNm' AS KEY 
-          ,'uploadFileNm' AS NAME
-          ,'0px' AS WIDTH
-        FROM
-          DUAL
-        UNION ALL
-        SELECT 
-          'excelRowNum' AS KEY 
-          ,'excelRowNum' AS NAME
-          ,'0px' AS WIDTH
+          ,'text' AS TYPE
+          ,'true' AS SHOW
+          ,'left' AS ALIGN
         FROM
           DUAL
         UNION ALL
@@ -39,10 +21,17 @@
         LOWER(SUBSTR(CAMEL_COLUMN_NAME, 1, 1)) || SUBSTR(CAMEL_COLUMN_NAME, 2) AS KEY 
         ,COMMENTS AS NAME
         ,(LENGTH(COMMENTS) * 14)+30 || 'px' AS WIDTH
+        ,'text' AS TYPE
+        ,'true' AS SHOW
+        , ALIGN AS ALIGN
       FROM
         (
         SELECT
           REPLACE(INITCAP(REPLACE(COLUMN_NAME, '_', ' ')), ' ') AS CAMEL_COLUMN_NAME,
+          CASE WHEN A.DATA_TYPE = 'VARCHAR2' THEN 'left'
+               WHEN A.COLUMN_NAME != 'NO' AND A.DATA_TYPE = 'NUMBER' THEN 'right'
+               WHEN A.DATA_TYPE = 'CHAR' THEN 'left' 
+           END AS ALIGN,
           (
           SELECT
             NVL(COMMENTS,COLUMN_NAME) 
@@ -59,7 +48,6 @@
           <foreach collection="excludeColumns" item="column" separator=" , " open=" ( " close=" )">
             #{column}
           </foreach>
-       
         ORDER BY
           COLUMN_ID
       )

@@ -30,6 +30,7 @@
         :list-loading="listLoading"
         :use-checkbox="true"
         :delete-btn="true"
+        :grid-height="'379'"
         @onDeleteBtnClick="deleteBtnClick"
       />
     </div>
@@ -58,7 +59,9 @@ export default {
     },
     excelDataList: {
       type: Array,
-      default: []
+      default() {
+        return []
+      }
     },
     listLoading: {
       type: Boolean,
@@ -86,8 +89,7 @@ export default {
       closeFlag: true,
       // Grid
       headers: [],
-      dataList: [],
-      selectedRow: null
+      dataList: []
     }
   },
   mounted() {

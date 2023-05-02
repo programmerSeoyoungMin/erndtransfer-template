@@ -61,6 +61,7 @@
     
     <select id="retriveBsnsTempList" resultType="BsnsTempDto" parameterType="BsnsTempDto">      
       SELECT
+            rownum as no,
             '' AS ERROR_MSG,
             UPLOAD_DE,
             UPLOAD_FILE_NM,
@@ -104,7 +105,9 @@
             UNIT_BSNS_CD,
             PTC_BSNS_CD,
             PTC_BSNS_NAME,
-            Z1
+            Z1,
+            /* 오류여부 테스트용 */
+            CASE WHEN MOD(ROWNUM, 2) = 1 THEN 'Y' ELSE 'N' END AS ERROR_YN 
        FROM IRIS_BSNS_CD_MAP_TEMP
       WHERE 1=1
       <if test="uploadDe != null and uploadDe != ''">

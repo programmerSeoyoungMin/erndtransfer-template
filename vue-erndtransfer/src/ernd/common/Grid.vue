@@ -28,35 +28,75 @@
           <svg-icon icon-class="excel" /> 엑셀다운로드
         </el-button>
       </div>
+      <!-- 2023.05.02 msy : 가로스크롤 숨김현상으로 인해 virtualscroll component 추가
+                            virtualScroll 컴포넌트에서는 key-prop를 사용하고 있음.
+                            기본으로 no로 사용하도록 지정
+      -->
+      <div class="grid-container">
+        <virtual-scroll
+          ref="virtualScroll"
+          name="VirtualScroll"
+          :data="dataList"
+          :item-size="50"
+          key-prop="no"
+          row-prop="no"
+          @change="(dataList) => tableData = dataList"
+        >
+          <el-table
+            v-show="!useCheckbox"
+            v-loading="listLoading"
+            :data="tableData"
+            :stripe="stripe"
+            :border="border"
+            :height="gridHeight+'px'"
+            style="width: 100%"
+            row-key="no"
+            @current-change="rowSelect"
+            @selection-change="handleSelectionChange"
+          >
+            <!-- 2023.05.02 msy : align 수정중 -->
+            <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" show-overflow-tooltip>
+              <template v-slot="{row}">
+                <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
+                <span v-else>{{ row[header.key] }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
 
-      <el-table v-show="!useCheckbox" v-loading="listLoading" :data="dataList" border highlight-current-row style="width: 100%;" @current-change="rowSelect">
-        <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
-          <template v-slot="{row}">
-            <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
-            <span v-else>{{ row[header.key] }}</span>
-          </template>
-        </el-table-column>
-        <slot name="rows" />
-      </el-table>
-
-      <el-table v-show="useCheckbox" v-loading="listLoading" :data="dataList" border style="width: 100%;" @selection-change="rowSelect">
-        <el-table-column type="selection" align="center" width="40" />
-        <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
-          <template v-slot="{row}">
-            <span>{{ row[header.key] }}</span>
-          </template>
-        </el-table-column>
-        <slot name="rows" />
-      </el-table>
-
+          <el-table
+            v-show="useCheckbox"
+            v-loading="listLoading"
+            :data="tableData"
+            :stripe="stripe"
+            :border="border"
+            :height="gridHeight+'px'"
+            style="width: 100%"
+            row-key="no"
+            @current-change="rowSelect"
+            @selection-change="handleSelectionChange"
+          >
+            <el-table-column type="selection" align="center" width="50" />
+            <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" show-overflow-tooltip>
+              <template v-slot="{row}">
+                <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
+                <span v-else>{{ row[header.key] }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </virtual-scroll>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import VirtualScroll from 'el-table-virtual-scroll'
 
 export default {
   name: 'Grid',
+  component: {
+    VirtualScroll
+  },
   props: {
     gridName: {
       type: String,
@@ -103,11 +143,41 @@ export default {
       default: () => {
         return [10, 50, 100]
       }
+    },
+    gridHeight: {
+      type: String,
+      default: '500px'
     }
   },
   data() {
     return {
-      selectedRow: null
+      selectedRow: null,
+      tableData: [],
+      stripe: false,
+      border: true,
+      status: false,
+      fixed: false
+    }
+  },
+  watch: {
+    headers: {
+      handler: function() {
+        // 2023.05.02 msy : header 가운데 정렬 추가
+        const headerWrapper = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__header-wrapper>.el-table__header>.has-gutter>tr')
+        headerWrapper.style.textAlignLast = 'center'
+      },
+      deep: true
+    },
+    dataList: {
+      handler: function() {
+        // 2023.05.02 msy : data로드 후, x-scroll & y-scroll 높이 조정
+        const table = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__body-wrapper.is-scrolling-left')
+        const header = document.querySelector('.el-table-virtual-scroll .el-table .el-table__header-wrapper')
+        if (table) {
+          table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+        }
+      },
+      deep: true
     }
   },
   methods: {
@@ -116,17 +186,23 @@ export default {
       this.$emit('onRowSelect', this.selectedRow)
     },
     deleteBtnClick() {
-      if (this.selectedRow === undefined || this.selectedRow === null) {
+      if (this.selectedRow === undefined || this.selectedRow === null || this.selectedRow.length === 0) {
         this.$alert('삭제할 행을 선택하세요.', '삭제')
         return
       }
-
-      if (Array.isArray(this.selectedRow)) { this.selectedRow.forEach((element) => this.dataList.splice(this.dataList.findIndex((value) => value.no === element.no), 1)) } else { this.dataList.splice(this.dataList.findIndex((value) => value.no === this.selectedRow.no), 1) }
+      if (Array.isArray(this.selectedRow)) {
+        this.selectedRow.forEach((element) => this.dataList.splice(this.dataList.findIndex((value) => value.no === element.no), 1))
+      } else {
+        this.dataList.splice(this.dataList.findIndex((value) => value.no === this.selectedRow.no), 1)
+      }
+    },
+    handleSelectionChange(selectedRow) {
+      this.selectedRow = selectedRow
     }
+
   }
 }
 </script>
 
 <style scoped>
-
 </style>
