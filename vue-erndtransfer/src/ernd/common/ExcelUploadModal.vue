@@ -128,10 +128,9 @@ export default {
       }
     },
     handleDrop(event) {
-      
+
     },
     handleUpload() {
-      
       this.classObject = {
         'fas': true,
         'fa-spinner': true,
@@ -153,33 +152,32 @@ export default {
     },
     saveBtnClick() {
       this.saveFlag = true
-      
+
       if (this.excelDataList.length === 0) {
         this.$alert('저장할 데이터가 없습니다.')
         this.saveFlag = false
       } else {
         for (let i = 0; i < this.excelDataList.length; i++) {
-          if (this.excelDataList[i].errorYn == 'Y') {
+          if (this.excelDataList[i].errorYn === 'Y') {
             this.$alert('저장할 수 없는 데이터가 존재합니다.')
             this.saveFlag = false
             break
           }
         }
-      } 
-      
-      if(this.saveFlag){
-        const result = this.$emit('onSaveBtnClick')  
-        if(result){
+      }
+
+      if (this.saveFlag) {
+        const result = this.$emit('onSaveBtnClick')
+        if (result) {
           this.closeFlag = true
-          if(confirm('저장되었습니다. 창을 닫으시겠습니까?')){
+          if (confirm('저장되었습니다. 창을 닫으시겠습니까?')) {
             this.excelDataList = []
             this.closeBtnClick()
           }
-        }else{
+        } else {
           this.closeFlag = false
         }
       }
-      
     },
     deleteBtnClick() {
       this.$emit('onDeleteBtnClick')

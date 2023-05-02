@@ -36,7 +36,7 @@ export default {
   },
   methods: {
     downloadBtnClick() {
-      //fileName 파라미터에 다운로드 될 파일명을 입력함.
+      // fileName 파라미터에 다운로드 될 파일명을 입력함.
       const downloadUrl = 'http://localhost:8080/file/download?fileName=BSNS_CD.xlsx'
       Axios.get(downloadUrl, {
         responseType: 'blob' // 응답 데이터 타입
@@ -101,7 +101,7 @@ export default {
         .finally(() => {
           this.listLoading = false
         }
-      )
+        )
       return result
     }
   }
