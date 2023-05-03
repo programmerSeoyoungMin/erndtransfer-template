@@ -398,12 +398,24 @@ export const asyncRoutes = [
   {
     path: '/ernd',
     component: Layout,
+    redirect: '/ernd/bsns',
+    name: 'dataTransfer',
+    meta: {
+      title: '데이터정제',
+      icon: 'folder-solid'
+    },
     children: [
       {
         path: 'excel',
         component: () => import('@/ernd/view/ModalDemo'),
         name: 'excelIndex',
         meta: { title: 'Excel Upload', icon: 'excel', noCache: true }
+      },
+      {
+        path: 'bsns',
+        component: () => import('@/ernd/view/Bsns'),
+        name: '사업',
+        meta: { title: '데이터정제>사업', icon: 'briefcase-solid', noCache: true }
       }
     ]
   },

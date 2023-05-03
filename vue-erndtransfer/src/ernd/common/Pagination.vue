@@ -1,10 +1,11 @@
 <template>
   <div style="text-align: center;">
     <el-pagination
-      :current-page="pager.currentPage"
+      :current-page.sync="pager.currentPage"
       :page-size="pager.limit"
       layout="prev, pager, next"
       :total="pager.total"
+      @current-change="$emit('onhandleCurrentChange')"
     />
   </div>
 </template>
@@ -16,6 +17,15 @@ export default {
     pager: {
       type: Object,
       required: true
+    }
+  },
+  // 2023.05.03. msy 페이지 변경 시 event binding 추가
+  watch: {
+    pager: {
+      handler: function() {
+        this.$emit('onhandleCurrentChange', this.pager.currentPage)
+      },
+      deep: true
     }
   }
 }

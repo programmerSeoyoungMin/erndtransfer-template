@@ -11,7 +11,7 @@ import lombok.Setter;
 @Alias("BsnsTempDto")
 @RequiredArgsConstructor
 public class BsnsTempDto {
-  private int no;
+  private int seq;
   private String uploadDe;
   private String uploadFileNm;
   private int excelRowNum;

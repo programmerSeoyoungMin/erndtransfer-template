@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="filter-container">
       <aside>
-        <el-form>
+        <el-form :model="model">
           <div class="createPost-main-container">
             <el-row style="margin-top: 20px">
               <div class="postInfo-container">
@@ -26,7 +26,16 @@
 
 export default {
   name: 'SearchTable',
-  components: {}
+  components: {},
+  props: {
+    // formdata model 추가
+    model: {
+      type: Object,
+      default() {
+        return {}
+      }
+    }
+  }
 }
 </script>
 

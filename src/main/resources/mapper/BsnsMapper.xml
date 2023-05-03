@@ -3,169 +3,151 @@
 
 <mapper namespace="com.anyfive.erndtransfer.domain.mapper.BsnsMapper">
 
+    <sql id="bsnsField">
+      SELE_YY,
+      ERND_BSNS_CD,
+      SELE_YY_BSNS_CD,
+      ERND_BSNS_NAME_1,
+      ERND_BSNS_NAME_2,
+      ERND_BSNS_NAME_3,
+      ERND_BSNS_NAME_4,
+      DBRAIN_CD,
+      MOEF_DBRAIN_CD,
+      ERND_DBRAIN_CD,
+      BSNS_YY,
+      JRSD_CD,
+      JRSD_NAME,
+      ACTG_CD,
+      ACTG_NAME,
+      FILD_NAME,
+      FILD_CD,
+      SECTOR_NAME,
+      SECTOR_CD,
+      PROGRAM_ID,
+      PROGRAM_NAME,
+      PROGRAM_CODE,
+      UNIT_ID,
+      UNIT_NAME,
+      UNIT_CD,
+      PTC_ID,
+      PTC_NAME,
+      PTC_CD,
+      BSNS_CD,
+      BUD_AM,
+      STAC_AM,
+      BRDN_BSNS_NAME,
+      BRDN_BSNS_NAME2,
+      IRIS_BSNS_CD,
+      YY,
+      PROGRAM_BSNS_CD,
+      UNIT_BSNS_CD,
+      PTC_BSNS_CD,
+      PTC_BSNS_NAME,
+      Z1
+    </sql>
+
     <select id="retriveBsnsList" resultType="BsnsDto" parameterType="BsnsDto">      
-      SELECT
-            NO,
-            SELE_YY,
-            ERND_BSNS_CD,
-            SELE_YY_BSNS_CD,
-            ERND_BSNS_NAME_1,
-            ERND_BSNS_NAME_2,
-            ERND_BSNS_NAME_3,
-            ERND_BSNS_NAME_4,
-            DBRAIN_CD,
-            MOEF_DBRAIN_CD,
-            ERND_DBRAIN_CD,
-            BSNS_YY,
-            JRSD_CD,
-            JRSD_NAME,
-            ACTG_CD,
-            ACTG_NAME,
-            FILD_NAME,
-            FILD_CD,
-            SECTOR_NAME,
-            SECTOR_CD,
-            PROGRAM_ID,
-            PROGRAM_NAME,
-            PROGRAM_CODE,
-            UNIT_ID,
-            UNIT_NAME,
-            UNIT_CD,
-            PTC_ID,
-            PTC_NAME,
-            PTC_CD,
-            BSNS_CD,
-            BUD_AM,
-            STAC_AM,
-            BRDN_BSNS_NAME,
-            BRDN_BSNS_NAME2,
-            IRIS_BSNS_CD,
-            YY,
-            PROGRAM_BSNS_CD,
-            UNIT_BSNS_CD,
-            PTC_BSNS_CD,
-            PTC_BSNS_NAME,
-            Z1,
-       FROM IRIS_BSNS_CD_MAP
+    SELECT  ROWNUM AS SEQ,
+            SEQ AS REAL_SEQ,
+            <include refid="bsnsField"/>
+      FROM
+      ( 
+        <if test="mappingYn != null">
+            SELECT 
+                SEQ,
+                <include refid="bsnsField"/>
+            FROM IRIS_BSNS_CD_MAP
+            WHERE 'Y' = #{mappingYn}
+            UNION ALL
+            SELECT * FROM
+            (SELECT 
+                    9999 AS SEQ,
+                    BIZ_REQST_YR AS SELE_YY,
+                    BIZ_CD AS ERND_BSNS_CD,
+                    '' AS SELE_YY_BSNS_CD,
+                    '' AS ERND_BSNS_NAME_1,
+                    '' AS ERND_BSNS_NAME_2,
+                    '' AS ERND_BSNS_NAME_3,
+                    '' AS ERND_BSNS_NAME_4,
+                    '' AS DBRAIN_CD,
+                    '' AS MOEF_DBRAIN_CD,
+                    '' AS ERND_DBRAIN_CD,
+                    '' AS BSNS_YY,
+                    '' AS JRSD_CD,
+                    '' AS JRSD_NAME,
+                    '' AS ACTG_CD,
+                    '' AS ACTG_NAME,
+                    '' AS FILD_NAME,
+                    '' AS FILD_CD,
+                    '' AS SECTOR_NAME,
+                    '' AS SECTOR_CD,
+                    '' AS PROGRAM_ID,
+                    '' AS PROGRAM_NAME,
+                    '' AS PROGRAM_CODE,
+                    '' AS UNIT_ID,
+                    '' AS UNIT_NAME,
+                    '' AS UNIT_CD,
+                    '' AS PTC_ID,
+                    '' AS PTC_NAME,
+                    '' AS PTC_CD,
+                    '' AS BSNS_CD,
+                    0 AS BUD_AM,
+                    0 AS STAC_AM,
+                    '' AS BRDN_BSNS_NAME,
+                    '' AS BRDN_BSNS_NAME2,
+                    '' AS IRIS_BSNS_CD,
+                    '' AS YY,
+                    '' AS PROGRAM_BSNS_CD,
+                    '' AS UNIT_BSNS_CD,
+                    '' AS PTC_BSNS_CD,
+                    '' AS PTC_BSNS_NAME,
+                    '' AS Z1
+            FROM ERND_BIZ_CD
+            ORDER BY BIZ_CD, BIZ_REQST_YR
+            )
+            WHERE 'N' = #{mappingYn}
+        ORDER BY SEQ
+        </if>
+      ) A
       WHERE 1=1
-        <if test="seleYy != null and seleYy != ''">
-            AND SELE_YY = #{seleYy}
-        </if>
-        <if test="erndBsnsCd != null and erndBsnsCd != ''">
-            AND ERND_BSNS_CD LIKE '%'||'#{erndBsnsCd}'||'%'
-        </if>
-        <if test="irisBsnsCd != null and irisBsnsCd != ''">
-            AND IRIS_BSNS_CD LIKE '%'||'#{irisBsnsCd}'||'%'
-        </if>
-    </select>
-    
-    <select id="retriveBsnsTempList" resultType="BsnsTempDto" parameterType="BsnsTempDto">      
-      SELECT
-            rownum as no,
-            '' AS ERROR_MSG,
-            UPLOAD_DE,
-            UPLOAD_FILE_NM,
-            EXCEL_ROW_NUM,
-            SELE_YY,
-            ERND_BSNS_CD,
-            SELE_YY_BSNS_CD,
-            ERND_BSNS_NAME_1,
-            ERND_BSNS_NAME_2,
-            ERND_BSNS_NAME_3,
-            ERND_BSNS_NAME_4,
-            DBRAIN_CD,
-            MOEF_DBRAIN_CD,
-            ERND_DBRAIN_CD,
-            BSNS_YY,
-            JRSD_CD,
-            JRSD_NAME,
-            ACTG_CD,
-            ACTG_NAME,
-            FILD_NAME,
-            FILD_CD,
-            SECTOR_NAME,
-            SECTOR_CD,
-            PROGRAM_ID,
-            PROGRAM_NAME,
-            PROGRAM_CODE,
-            UNIT_ID,
-            UNIT_NAME,
-            UNIT_CD,
-            PTC_ID,
-            PTC_NAME,
-            PTC_CD,
-            BSNS_CD,
-            BUD_AM,
-            STAC_AM,
-            BRDN_BSNS_NAME,
-            BRDN_BSNS_NAME2,
-            IRIS_BSNS_CD,
-            YY,
-            PROGRAM_BSNS_CD,
-            UNIT_BSNS_CD,
-            PTC_BSNS_CD,
-            PTC_BSNS_NAME,
-            Z1,
-            /* 오류여부 테스트용 */
-            CASE WHEN MOD(ROWNUM, 2) = 1 THEN 'Y' ELSE 'N' END AS ERROR_YN 
-       FROM IRIS_BSNS_CD_MAP_TEMP
-      WHERE 1=1
-      <if test="uploadDe != null and uploadDe != ''">
-          AND UPLOAD_DE = #{uploadDe}
+      <if test="seleYy != null and seleYy != ''">
+          AND SELE_YY = #{seleYy}
       </if>
-      <if test="uploadFileNm != null and uploadFileNm != ''">
-          AND UPLOAD_FILE_NM = #{uploadFileNm}
-      </if>  
+      <if test="erndBsnsCd != null and erndBsnsCd != ''">
+          AND ERND_BSNS_CD LIKE '%'||UPPER(#{erndBsnsCd})||'%' 
+      </if>
+      <if test="irisBsnsCd != null and irisBsnsCd != ''">
+          AND IRIS_BSNS_CD LIKE '%'||UPPER(#{irisBsnsCd})||'%'
+      </if>
+      <if test="limit != null">
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+      </if>
+  </select>
+  
+  
+    
+  <select id="retriveBsnsTempList" resultType="BsnsTempDto" parameterType="BsnsTempDto">      
+    SELECT
+          rownum as SEQ,
+          '' AS ERROR_MSG,
+          UPLOAD_DE,
+          UPLOAD_FILE_NM,
+          EXCEL_ROW_NUM,
+          <include refid="bsnsField"/>
+          ,
+          /* 오류여부 테스트용 */
+          CASE WHEN MOD(ROWNUM, 2) = 1 THEN 'Y' ELSE 'N' END AS ERROR_YN 
+    FROM  IRIS_BSNS_CD_MAP_TEMP
+    WHERE 1=1
+    <if test="uploadDe != null and uploadDe != ''">
+        AND UPLOAD_DE = #{uploadDe}
+    </if>
+    <if test="uploadFileNm != null and uploadFileNm != ''">
+        AND UPLOAD_FILE_NM = #{uploadFileNm}
+    </if>  
     </select>
     
-    
-    <insert id="registBsns" parameterType="BsnsDto">
-      INSERT INTO IRIS_BSNS_CD_MAP
-      (
-        NO,
-        SELE_YY,
-        ERND_BSNS_CD,
-        SELE_YY_BSNS_CD,
-        ERND_BSNS_NAME_1,
-        ERND_BSNS_NAME_2,
-        ERND_BSNS_NAME_3,
-        ERND_BSNS_NAME_4,
-        DBRAIN_CD,
-        MOEF_DBRAIN_CD,
-        ERND_DBRAIN_CD,
-        BSNS_YY,
-        JRSD_CD,
-        JRSD_NAME,
-        ACTG_CD,
-        ACTG_NAME,
-        FILD_NAME,
-        FILD_CD,
-        SECTOR_NAME,
-        SECTOR_CD,
-        PROGRAM_ID,
-        PROGRAM_NAME,
-        PROGRAM_CODE,
-        UNIT_ID,
-        UNIT_NAME,
-        UNIT_CD,
-        PTC_ID,
-        PTC_NAME,
-        PTC_CD,
-        BSNS_CD,
-        BUD_AM,
-        STAC_AM,
-        BRDN_BSNS_NAME,
-        BRDN_BSNS_NAME2,
-        IRIS_BSNS_CD,
-        YY,
-        PROGRAM_BSNS_CD,
-        UNIT_BSNS_CD,
-        PTC_BSNS_CD,
-        PTC_BSNS_NAME,
-        Z1
-      ) VALUES
-      (
-        (SELECT NVL(MAX(NO),0)+1 FROM IRIS_BSNS_CD_MAP),
+    <sql id="bsnsParamField">
         #{seleYy},
         #{erndBsnsCd},
         #{seleYyBsnsCd},
@@ -206,100 +188,33 @@
         #{ptcBsnsCd},
         #{ptcBsnsName},
         #{z1}
+    </sql>
+    
+    <insert id="registBsns" parameterType="BsnsDto">
+      INSERT INTO IRIS_BSNS_CD_MAP
+      (
+        SEQ,
+        <include refid="bsnsField"/>
+      ) VALUES
+      (
+        (SELECT NVL(MAX(SEQ),0)+1 FROM IRIS_BSNS_CD_MAP),
+        <include refid="bsnsParamField"></include>
       )
     </insert>
     
-     <insert id="registBsnsTemp" parameterType="BsnsTempDto">
+    <insert id="registBsnsTemp" parameterType="BsnsTempDto">
       INSERT INTO IRIS_BSNS_CD_MAP_TEMP
       (
         UPLOAD_DE,
         UPLOAD_FILE_NM,
         EXCEL_ROW_NUM,
-        SELE_YY,
-        ERND_BSNS_CD,
-        SELE_YY_BSNS_CD,
-        ERND_BSNS_NAME_1,
-        ERND_BSNS_NAME_2,
-        ERND_BSNS_NAME_3,
-        ERND_BSNS_NAME_4,
-        DBRAIN_CD,
-        MOEF_DBRAIN_CD,
-        ERND_DBRAIN_CD,
-        BSNS_YY,
-        JRSD_CD,
-        JRSD_NAME,
-        ACTG_CD,
-        ACTG_NAME,
-        FILD_NAME,
-        FILD_CD,
-        SECTOR_NAME,
-        SECTOR_CD,
-        PROGRAM_ID,
-        PROGRAM_NAME,
-        PROGRAM_CODE,
-        UNIT_ID,
-        UNIT_NAME,
-        UNIT_CD,
-        PTC_ID,
-        PTC_NAME,
-        PTC_CD,
-        BSNS_CD,
-        BUD_AM,
-        STAC_AM,
-        BRDN_BSNS_NAME,
-        BRDN_BSNS_NAME2,
-        IRIS_BSNS_CD,
-        YY,
-        PROGRAM_BSNS_CD,
-        UNIT_BSNS_CD,
-        PTC_BSNS_CD,
-        PTC_BSNS_NAME,
-        Z1
+        <include refid="bsnsField"/>
       ) VALUES
       (
         #{uploadDe},
         #{uploadFileNm},
         #{excelRowNum},
-        #{seleYy},
-        #{erndBsnsCd},
-        #{seleYyBsnsCd},
-        #{erndBsnsName1},
-        #{erndBsnsName2},
-        #{erndBsnsName3},
-        #{erndBsnsName4},
-        #{dbrainCd},
-        #{moefDbrainCd},
-        #{erndDbrainCd},
-        #{bsnsYy},
-        #{jrsdCd},
-        #{jrsdName},
-        #{actgCd},
-        #{actgName},
-        #{fildName},
-        #{fildCd},
-        #{sectorName},
-        #{sectorCd},
-        #{programId},
-        #{programName},
-        #{programCode},
-        #{unitId},
-        #{unitName},
-        #{unitCd},
-        #{ptcId},
-        #{ptcName},
-        #{ptcCd},
-        #{bsnsCd},
-        #{budAm},
-        #{stacAm},
-        #{brdnBsnsName},
-        #{brdnBsnsName2},
-        #{irisBsnsCd},
-        #{yy},
-        #{programBsnsCd},
-        #{unitBsnsCd},
-        #{ptcBsnsCd},
-        #{ptcBsnsName},
-        #{z1}
+        <include refid="bsnsParamField"></include>
       )
     </insert>
 </mapper>

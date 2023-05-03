@@ -1,7 +1,6 @@
 package com.anyfive.erndtransfer.domain.dto;
 
 import org.apache.ibatis.type.Alias;
-import org.springframework.lang.Nullable;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +10,8 @@ import lombok.Setter;
 @Setter
 @Alias("BsnsDto")
 @RequiredArgsConstructor
-public class BsnsDto {
-  private String no;
+public class BsnsDto extends PagingDto{
+  private String seq;
   private String seleYy;
   private String erndBsnsCd;
   private String seleYyBsnsCd;
@@ -53,4 +52,6 @@ public class BsnsDto {
   private String ptcBsnsCd;
   private String ptcBsnsName;
   private String z1;
+  private String mappingYn;
+  
 }

@@ -104,7 +104,7 @@ public class ExcelController<T> {
         Object value = data.get(name);
         String type = field.getType().getSimpleName();
         
-        if (value != null) {
+        if (value != null && !value.equals("") && value.toString().length() > 0) {
           if(type == "int") {
             value = Integer.parseInt((String) value);
           } else if (type == "long") {

@@ -5,7 +5,7 @@
 
  
     <select id="retriveHeaderList" resultType="HeaderDto" parameterType="HeaderDto">      
-      <if test="includeErrorFieldYn != null and includeErrorFieldYn != '' and includeErrorFieldYn = 'Y'">
+      <if test="includeErrorFieldYn != null and includeErrorFieldYn != ''">
         SELECT 
           'errorMsg' AS KEY 
           ,'오류구분' AS NAME
@@ -44,10 +44,12 @@
           ALL_TAB_COLS A
         WHERE
           TABLE_NAME = 'IRIS_'||'${gbn}'||'_MAP'
-          AND COLUMN_NAME NOT IN 
-          <foreach collection="excludeColumns" item="column" separator=" , " open=" ( " close=" )">
-            #{column}
-          </foreach>
+          <if test="exclude != '' and exclude != null">
+            AND COLUMN_NAME NOT IN 
+            <foreach collection="excludeColumns" item="column" separator=" , " open=" ( " close=" )">
+              #{column}
+            </foreach>
+          </if>
         ORDER BY
           COLUMN_ID
       )

@@ -14,7 +14,7 @@
       @onUploadBtnClick="uploadBtnClick"
       @onDownloadBtnClick="downloadBtnClick"
       @onSaveBtnClick="saveBtnClick"
-      @close="showModal = false"
+      @close="closeBtnClick"
     />
   </div>
 </template>
@@ -103,6 +103,11 @@ export default {
         }
         )
       return result
+    },
+    // modal close시, excelDataList 초기화
+    closeBtnClick() {
+      this.excelDataList = []
+      this.showModal = false
     }
   }
 }

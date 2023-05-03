@@ -21,7 +21,9 @@ public class CommonController {
 
     @PostMapping("/retriveHeaderList")
     public List<HeaderDto> selectHeaderList(@RequestBody(required = false) HeaderDto dto) {
-      dto.setExcludeColumns(dto.getExclude().split(","));
+      if(dto.getExclude() != null && dto.getExclude().length() != 0){
+        dto.setExcludeColumns(dto.getExclude().split(","));  
+      }
       List<HeaderDto> headerList = commonService.retriveHeaderList(dto);
       return headerList;
     }

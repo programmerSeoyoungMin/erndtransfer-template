@@ -19,7 +19,9 @@ public class HeaderDto {
   private String align;
   private Boolean show;
   private String exclude;
+  
   private String includeErrorFieldYn;
+  
   //excludeColumns
   private String[] excludeColumns;
   

@@ -31,6 +31,7 @@
         :use-checkbox="true"
         :delete-btn="true"
         :grid-height="'379'"
+        :use-vscroll="true"
         @onDeleteBtnClick="deleteBtnClick"
       />
     </div>

@@ -28,11 +28,38 @@
           <svg-icon icon-class="excel" /> 엑셀다운로드
         </el-button>
       </div>
-      <!-- 2023.05.02 msy : 가로스크롤 숨김현상으로 인해 virtualscroll component 추가
+      <!-- 2023.05.02 msy : 가로스크롤 숨김현상으로 인해 virtualscroll component 추가 => useVscroll prop true시, 사용가능.
                             virtualScroll 컴포넌트에서는 key-prop를 사용하고 있음.
                             기본으로 no로 사용하도록 지정
+                            useCommon을 기본으로 사용하도록 함.
+                            useVscroll을 사용하려면 useCommon을 false로 지정하고 사용할 것.
       -->
-      <div class="grid-container">
+
+      <!-- default!!! useCommon true -->
+      <div v-if="useCommon" class="grid-container">
+        <el-table v-show="!useCheckbox" v-loading="listLoading" :height="gridHeight" :data="dataList" border highlight-current-row style="width: 100%;" header-align="center" show-overflow-tooltip @current-change="rowSelect">
+          <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
+            <template v-slot="{row}">
+              <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
+              <span v-else>{{ row[header.key] }}</span>
+            </template>
+          </el-table-column>
+          <slot name="rows" />
+        </el-table>
+
+        <el-table v-show="useCheckbox" v-loading="listLoading" :data="dataList" border style="width: 100%;" header-align="center" show-overflow-tooltip @selection-change="rowSelect">
+          <el-table-column type="selection" align="center" width="40" />
+          <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
+            <template v-slot="{row}">
+              <span>{{ row[header.key] }}</span>
+            </template>
+          </el-table-column>
+          <slot name="rows" />
+        </el-table>
+      </div>
+
+      <!-- useVscroll true -->
+      <div v-else-if="useVscroll" class="grid-container">
         <virtual-scroll
           ref="virtualScroll"
           name="VirtualScroll"
@@ -54,8 +81,7 @@
             @current-change="rowSelect"
             @selection-change="handleSelectionChange"
           >
-            <!-- 2023.05.02 msy : align 수정중 -->
-            <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" show-overflow-tooltip>
+            <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
               <template v-slot="{row}">
                 <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
                 <span v-else>{{ row[header.key] }}</span>
@@ -76,7 +102,7 @@
             @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" align="center" width="50" />
-            <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" show-overflow-tooltip>
+            <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
               <template v-slot="{row}">
                 <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
                 <span v-else>{{ row[header.key] }}</span>
@@ -84,6 +110,7 @@
             </el-table-column>
           </el-table>
         </virtual-scroll>
+
       </div>
     </div>
   </div>
@@ -147,6 +174,14 @@ export default {
     gridHeight: {
       type: String,
       default: '500px'
+    },
+    useVscroll: {
+      type: Boolean,
+      default: false
+    },
+    useCommon: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
@@ -160,13 +195,25 @@ export default {
     }
   },
   watch: {
-    headers: {
+    useVscroll: {
       handler: function() {
-        // 2023.05.02 msy : header 가운데 정렬 추가
-        const headerWrapper = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__header-wrapper>.el-table__header>.has-gutter>tr')
-        headerWrapper.style.textAlignLast = 'center'
+        if (this.useVscroll) {
+          this.useCommon = false
+        } else {
+          this.useCommon = true
+        }
       },
-      deep: true
+      immediate: true
+    },
+    useCommon: {
+      handler: function() {
+        if (this.useCommon) {
+          this.useVscroll = false
+        } else {
+          this.useVscroll = true
+        }
+      },
+      immediate: true
     },
     dataList: {
       handler: function() {

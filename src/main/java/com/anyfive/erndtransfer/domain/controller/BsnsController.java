@@ -1,12 +1,8 @@
 package com.anyfive.erndtransfer.domain.controller;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.boot.configurationprocessor.json.JSONArray;
-import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,6 +28,23 @@ public class BsnsController {
       List<BsnsTempDto> bsnsList = bsnsService.retriveBsnsTempList(bsnsTempDto);
       return bsnsList;
   }
+  
+  @PostMapping("/retriveBsnsList")
+  public HashMap<String, Object> retriveBsnsList(@RequestBody BsnsDto bsnsDto) {
+    
+    
+    List<BsnsDto> bsnsList = bsnsService.retriveBsnsList(bsnsDto);
+
+    bsnsDto.setLimit(null);
+    int totalCnt = bsnsService.retriveBsnsListTotalCnt(bsnsDto);
+    
+    HashMap<String, Object> resultMap = new HashMap<String, Object>();
+    resultMap.put("totalCnt", totalCnt);
+    resultMap.put("bsnsList", bsnsList);
+    
+    return resultMap;
+  }
+  
   @PostMapping("/saveBsnsList")
   public void saveBsnsTempList(@RequestBody List<BsnsDto> data) {
     bsnsService.saveBsnsList(data);

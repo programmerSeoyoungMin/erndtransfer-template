@@ -39,5 +39,11 @@ public class BsnsService {
       bsnsMapper.registBsns(bsnsDto);
     }
   }
+  //TODO 임시 service (count Mapper xml 추가필요)
+  public int retriveBsnsListTotalCnt(BsnsDto bsnsDto) {
+    bsnsDto.setLimit(null);
+    int totalCnt = bsnsMapper.retriveBsnsList(bsnsDto).size();
+    return totalCnt;
+  }
 
 }
