@@ -35,7 +35,6 @@ public class BsnsController {
     
     List<BsnsDto> bsnsList = bsnsService.retriveBsnsList(bsnsDto);
 
-    bsnsDto.setLimit(null);
     int totalCnt = bsnsService.retriveBsnsListTotalCnt(bsnsDto);
     
     HashMap<String, Object> resultMap = new HashMap<String, Object>();

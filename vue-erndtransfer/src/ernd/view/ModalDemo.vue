@@ -6,11 +6,9 @@
     <ExcelUploadModal
       v-if="showModal"
       :excel-title="'사업 정제데이터 엑셀업로드'"
-      :gbn="'BSNS_CD'"
+      :task-se-tbl-nm="'IRIS_BSNS_TEMP_CD_MAP'"
       :excel-data-list="excelDataList"
       :list-loading="listLoading"
-      :exclude="'NO'"
-      :include-error-field-yn="'Y'"
       @onUploadBtnClick="uploadBtnClick"
       @onDownloadBtnClick="downloadBtnClick"
       @onSaveBtnClick="saveBtnClick"

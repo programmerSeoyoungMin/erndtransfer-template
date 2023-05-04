@@ -5,54 +5,13 @@
 
  
     <select id="retriveHeaderList" resultType="HeaderDto" parameterType="HeaderDto">      
-      <if test="includeErrorFieldYn != null and includeErrorFieldYn != ''">
-        SELECT 
-          'errorMsg' AS KEY 
-          ,'오류구분' AS NAME
-          ,'100px' AS WIDTH
-          ,'text' AS TYPE
-          ,'true' AS SHOW
-          ,'left' AS ALIGN
-        FROM
-          DUAL
-        UNION ALL
-      </if>
-      SELECT
-        LOWER(SUBSTR(CAMEL_COLUMN_NAME, 1, 1)) || SUBSTR(CAMEL_COLUMN_NAME, 2) AS KEY 
-        ,COMMENTS AS NAME
-        ,(LENGTH(COMMENTS) * 14)+30 || 'px' AS WIDTH
-        ,'text' AS TYPE
-        ,'true' AS SHOW
-        , ALIGN AS ALIGN
-      FROM
-        (
-        SELECT
-          REPLACE(INITCAP(REPLACE(COLUMN_NAME, '_', ' ')), ' ') AS CAMEL_COLUMN_NAME,
-          CASE WHEN A.DATA_TYPE = 'VARCHAR2' THEN 'left'
-               WHEN A.COLUMN_NAME != 'NO' AND A.DATA_TYPE = 'NUMBER' THEN 'right'
-               WHEN A.DATA_TYPE = 'CHAR' THEN 'left' 
-           END AS ALIGN,
-          (
-          SELECT
-            NVL(COMMENTS,COLUMN_NAME) 
-          FROM
-            ALL_COL_COMMENTS T
-          WHERE
-            T.TABLE_NAME = A.TABLE_NAME
-            AND T.COLUMN_NAME = A.COLUMN_NAME) AS COMMENTS
-        FROM
-          ALL_TAB_COLS A
-        WHERE
-          TABLE_NAME = 'IRIS_'||'${gbn}'||'_MAP'
-          <if test="exclude != '' and exclude != null">
-            AND COLUMN_NAME NOT IN 
-            <foreach collection="excludeColumns" item="column" separator=" , " open=" ( " close=" )">
-              #{column}
-            </foreach>
-          </if>
-        ORDER BY
-          COLUMN_ID
-      )
+      SELECT 
+            ARTCL_ID AS KEY,
+            ARTCL_NM AS NAME,
+            ARTCL_SZ || 'px' AS WIDTH,
+            ARTCL_SORT_CRTR_NM AS ALIGN
+      FROM  ERND_ARTCL_INFO 
+      WHERE TASK_SE_TBL_NM = #{taskSeTblNm}
     </select>
 
 </mapper>

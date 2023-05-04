@@ -54,7 +54,7 @@ export default {
       type: String,
       default: ''
     },
-    gbn: {
+    taskSeTblNm: {
       type: String,
       default: ''
     },
@@ -67,14 +67,6 @@ export default {
     listLoading: {
       type: Boolean,
       default: false
-    },
-    exclude: {
-      type: String,
-      default: ''
-    },
-    includeErrorFieldYn: {
-      type: String,
-      default: 'N'
     }
   },
   data() {
@@ -96,9 +88,7 @@ export default {
   },
   mounted() {
     const headerDto = {
-      gbn: this.gbn,
-      exclude: this.exclude,
-      includeErrorFieldYn: this.includeErrorFieldYn // 오류구분 포함여부
+      taskSeTblNm: this.taskSeTblNm
     }
     Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
       .then(response => {

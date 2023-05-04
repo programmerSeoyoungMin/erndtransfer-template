@@ -13,13 +13,13 @@
         <template v-slot:body>
           <el-col :span="9">
             <el-form-item label-width="130px" label="e-R&D 사업코드">
-              <el-input v-model="bsnsSearchForm.erndBsnsCd" placeholder="텍스트입력" />
+              <el-input v-model="bsnsSearchForm.erndBsnsCd" placeholder="" />
             </el-form-item>
           </el-col>
 
           <el-col :span="9">
             <el-form-item label-width="180px" label="IRIS 사업코드">
-              <el-input v-model="bsnsSearchForm.irisBsnsCd" placeholder="텍스트입력" />
+              <el-input ref="irisBsnsCd" v-model="bsnsSearchForm.irisBsnsCd" placeholder="" />
             </el-form-item>
           </el-col>
 
@@ -62,6 +62,7 @@
         :excel-download="true"
         :row-limit="pager.limit"
         :grid-height="'400'"
+        :total-cnt="pager.total"
         @onRowSelect="rowSelect"
         @onRowLimitSelect="setRowLimit"
         @onExcelUploadClick="excelUploadClick"
@@ -110,13 +111,25 @@ export default {
       }
     }
   },
+  watch: {
+    'bsnsSearchForm.mappingYn': function(val) {
+      const irisBsnsCd = this.$refs['irisBsnsCd'].$el.querySelector('input')
+      if (val === 'N') {
+        irisBsnsCd.value = ''
+        irisBsnsCd.disabled = true
+        irisBsnsCd.style.backgroundColor = 'lightgray'
+      } else {
+        irisBsnsCd.disabled = false
+        irisBsnsCd.style.backgroundColor = '#FFFFFF'
+      }
+    }
+  },
   mounted() {
     const today = new Date()
     this.bsnsSearchForm.seleYy = today.getFullYear() + ''
 
     const headerDto = {
-      gbn: 'BSNS_CD',
-      exclude: '' // 오류구분 포함여부
+      taskSeTblNm: 'IRIS_BSNS_CD_MAP'
     }
     Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
       .then(response => {
@@ -138,6 +151,14 @@ export default {
       searchParams.currentPage = this.pager.currentPage
       searchParams.limit = this.pager.limit
 
+      if (searchParams.mappingYn === 'N') {
+        this.headers = [
+          { 'key': 'seq', 'name': '번호(Q1)', 'width': '176' },
+          { 'key': 'seleYy', 'name': '선정년도(Q2)', 'width': '176' },
+          { 'key': 'erndBsnsCd', 'name': 'ERND사업코드(Q3)', 'width': '176' }
+        ]
+      }
+
       Axios.post('http://localhost:8080/bsns/retriveBsnsList', searchParams)
         .then(response => {
           this.dataList = response.data.bsnsList
@@ -152,6 +173,9 @@ export default {
     },
     setRowLimit(val) {
       if (val !== undefined) this.pager.limit = val
+      console.log(
+        'setRowLimit : ' + this.pager.limit + ', currentPage : ' + this.pager.currentPage
+      )
       this.search()
     },
     rowSelect(row) {

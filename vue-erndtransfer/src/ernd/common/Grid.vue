@@ -3,9 +3,10 @@
     <div class="filter-container">
 
       <span v-show="rowLimit > 0">
-        <span style="font-size:x-large; font-weight: bold">{{ gridName }}</span><span> 총 {{ dataList.length > rowLimit ? rowLimit : dataList.length }} / {{ dataList.length }} 건 </span>
+        <span style="font-size:x-large; font-weight: bold">{{ gridName }}</span><span> 총 {{ totalCnt }} 건 </span>
       </span>
-      <el-select v-show="rowLimit > 0" v-model="rowLimit" size="small" @change="$emit('onRowLimitSelect', rowLimit)">
+      <!-- v-model에서 rowLimit 같이 사용할 경우, Avoid mutating a prop directly 오류 발생으로 별도 model binding 함.-->
+      <el-select v-show="rowLimit > 0" v-model="gridLimit" size="small" @change="$emit('onRowLimitSelect', gridLimit)">
         <el-option
           v-for="item in options"
           :key="item"
@@ -36,7 +37,7 @@
       -->
 
       <!-- default!!! useCommon true -->
-      <div v-if="useCommon" class="grid-container">
+      <div v-if="common" class="grid-container">
         <el-table v-show="!useCheckbox" v-loading="listLoading" :height="gridHeight" :data="dataList" border highlight-current-row style="width: 100%;" header-align="center" show-overflow-tooltip @current-change="rowSelect">
           <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
             <template v-slot="{row}">
@@ -59,7 +60,7 @@
       </div>
 
       <!-- useVscroll true -->
-      <div v-else-if="useVscroll" class="grid-container">
+      <div v-else-if="vscroll" class="grid-container">
         <virtual-scroll
           ref="virtualScroll"
           name="VirtualScroll"
@@ -79,7 +80,6 @@
             style="width: 100%"
             row-key="no"
             @current-change="rowSelect"
-            @selection-change="handleSelectionChange"
           >
             <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
               <template v-slot="{row}">
@@ -99,7 +99,6 @@
             style="width: 100%"
             row-key="no"
             @current-change="rowSelect"
-            @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" align="center" width="50" />
             <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
@@ -177,11 +176,15 @@ export default {
     },
     useVscroll: {
       type: Boolean,
-      default: false
+      required: false
     },
     useCommon: {
       type: Boolean,
-      default: true
+      required: false
+    },
+    totalCnt: {
+      type: Number,
+      default: 0
     }
   },
   data() {
@@ -191,16 +194,21 @@ export default {
       stripe: false,
       border: true,
       status: false,
-      fixed: false
+      fixed: false,
+      gridLimit: 10,
+      common: true,
+      vscroll: false
     }
   },
   watch: {
     useVscroll: {
       handler: function() {
         if (this.useVscroll) {
-          this.useCommon = false
+          this.vscroll = true
+          this.common = false
         } else {
-          this.useCommon = true
+          this.vscroll = false
+          this.common = true
         }
       },
       immediate: true
@@ -208,20 +216,31 @@ export default {
     useCommon: {
       handler: function() {
         if (this.useCommon) {
-          this.useVscroll = false
+          this.common = true
+          this.vscroll = false
         } else {
-          this.useVscroll = true
+          this.common = false
+          this.vscroll = true
         }
       },
       immediate: true
     },
     dataList: {
       handler: function() {
-        // 2023.05.02 msy : data로드 후, x-scroll & y-scroll 높이 조정
-        const table = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__body-wrapper.is-scrolling-left')
-        const header = document.querySelector('.el-table-virtual-scroll .el-table .el-table__header-wrapper')
-        if (table) {
-          table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+        // 2023.05.03 msy : data로드 후, x-scroll & y-scroll 높이 조정 (if useCommon true)
+        if (this.useCommon) {
+          const table = document.querySelector('.el-table>.el-table__body-wrapper.is-scrolling-left')
+          const header = document.querySelector('.el-table .el-table__header-wrapper')
+          if (table) {
+            table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+          }
+        } else {
+          // 2023.05.02 msy : data로드 후, x-scroll & y-scroll 높이 조정 (if useVscroll true)
+          const table = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__body-wrapper.is-scrolling-left')
+          const header = document.querySelector('.el-table-virtual-scroll .el-table .el-table__header-wrapper')
+          if (table) {
+            table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+          }
         }
       },
       deep: true
