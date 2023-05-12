@@ -24,6 +24,7 @@
         <el-button type="primary" class="upload-btn" @click="handleUpload">파일 업로드</el-button>
       </div>
       <grid
+        ref="grid"
         :grid-name="'업로드 데이터 목록'"
         :headers="headers"
         :data-list="excelDataList"
@@ -86,17 +87,12 @@ export default {
       saveFlag: false
     }
   },
-  mounted() {
+  async mounted() {
     const headerDto = {
       taskSeTblNm: this.taskSeTblNm
     }
-    Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
-      .then(response => {
-        this.headers = response.data
-      })
-      .catch(error => {
-        console.log(error)
-      })
+    const response = await Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
+    this.headers = response.data
   },
   methods: {
     closeBtnClick() {
@@ -162,7 +158,6 @@ export default {
         if (result) {
           this.closeFlag = true
           if (confirm('저장되었습니다. 창을 닫으시겠습니까?')) {
-            this.excelDataList = []
             this.closeBtnClick()
           }
         } else {
