@@ -11,50 +11,95 @@ import lombok.Setter;
 @Alias("BsnsTempDto")
 @RequiredArgsConstructor
 public class BsnsTempDto {
-  private int seq;
+  /*엑셀 저장 데이터 정보*/
   private String uploadDe;
   private String uploadFileNm;
   private int excelRowNum;
+  /*오류메세지*/
   private String errorMsg;
-  private String seleYy;
-  private String erndBsnsCd;
-  private String seleYyBsnsCd;
-  private String erndBsnsName1;
-  private String erndBsnsName2;
-  private String erndBsnsName3;
-  private String erndBsnsName4;
-  private String dbrainCd;
-  private String moefDbrainCd;
-  private String erndDbrainCd;
-  private String bsnsYy;
-  private String jrsdCd;
-  private String jrsdName;
-  private String actgCd;
-  private String actgName;
-  private String fildName;
-  private String fildCd;
-  private String sectorName;
-  private String sectorCd;
-  private String programId;
-  private String programName;
-  private String programCode;
-  private String unitId;
-  private String unitName;
-  private String unitCd;
-  private String ptcId;
-  private String ptcName;
-  private String ptcCd;
-  private String bsnsCd;
-  private long budAm;
-  private long stacAm;
-  private String brdnBsnsName;
-  private String brdnBsnsName2;
-  private String irisBsnsCd;
-  private String yy;
-  private String programBsnsCd;
-  private String unitBsnsCd;
-  private String ptcBsnsCd;
-  private String ptcBsnsName;
-  private String z1;
+  /*오류여부*/
   private String errorYn;
+  /*번호*/
+  private String no;
+  private int seq;
+  /*선정년도*/
+  private String seleYy;
+  /*ERND사업코드*/
+  private String erndBsnsCd;
+  /*선정년도사업코드*/
+  private String seleYyBsnsCd;
+  /*대사업명*/
+  private String erndBsnsName1;
+  /*중사업명*/
+  private String erndBsnsName2;
+  /*소사업명*/
+  private String erndBsnsName3;
+  /*세부사업명*/
+  private String erndBsnsName4;
+  /*D-BRAIN코드*/
+  private String dbrainCd;
+  /*D-BRAIN코드명(기재부)*/
+  private String moefDbrainCd;
+  /*D-BRAIN코드명(기존)*/
+  private String erndDbrainCd;
+  /*사업년도*/
+  private String bsnsYy;
+  /*소관*/
+  private String jrsdCd;
+  /*소관명*/
+  private String jrsdName;
+  /*회계*/
+  private String actgCd;
+  /*회계명*/
+  private String actgName;
+  /*분야명*/
+  private String fildName;
+  /*분야코드*/
+  private String fildCd;
+  /*부문명*/
+  private String sectorName;
+  /*부문코드*/
+  private String sectorCd;
+  /*프로그램ID*/
+  private String programId;
+  /*프로그램명*/
+  private String programName;
+  /*프로그램코드*/
+  private String programCode;
+  /*단위ID*/
+  private String unitId;
+  /*단위명*/
+  private String unitName;
+  /*단위코드*/
+  private String unitCd;
+  /*세부ID*/
+  private String ptcId;
+  /*세부명*/
+  private String ptcName;
+  /*세부코드*/
+  private String ptcCd;
+  /*사업코드*/
+  private String bsnsCd;
+  /*예산액*/
+  private String budAm;
+  /*결산액*/
+  private String stacAm;
+  /*내역사업명*/
+  private String brdnBsnsName;
+  /*내역사업명2*/
+  private String brdnBsnsName2;
+  /*IRIS사업코드*/
+  private String irisBsnsCd;
+  /*연도*/
+  private String yy;
+  /*프로그램사업코드*/
+  private String programBsnsCd;
+  /*단위사업코드*/
+  private String unitBsnsCd;
+  /*세부사업코드*/
+  private String ptcBsnsCd;
+  /*세부사업명*/
+  private String ptcBsnsName;
+  /*Z1*/
+  private String z1;
 }

@@ -7,8 +7,11 @@ import lombok.RequiredArgsConstructor;
 @Alias("PagingDto")
 @RequiredArgsConstructor
 public class PagingDto {
+  /* 현재페이지 */
   private Integer currentPage;
+  /* 페이지당 게시물 수 */
   private Integer limit;
+  /* 페이지 시작 번호 */
   private Integer offset;
 
   public Integer getCurrentPage() {

@@ -416,6 +416,12 @@ export const asyncRoutes = [
         component: () => import('@/ernd/view/Bsns'),
         name: '사업',
         meta: { title: '데이터정제>사업', icon: 'briefcase-solid', noCache: true }
+      },
+      {
+        path: 'itepd',
+        component: () => import('@/ernd/view/Itepd'),
+        name: '비목',
+        meta: { title: '데이터정제>비목', icon: 'file-invoice-solid', noCache: true }
       }
     ]
   },

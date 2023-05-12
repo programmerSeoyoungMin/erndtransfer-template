@@ -37,22 +37,21 @@
       -->
 
       <!-- default!!! useCommon true -->
-      <div v-if="common" class="grid-container">
-        <el-table v-show="!useCheckbox" v-loading="listLoading" :height="gridHeight" :data="dataList" border highlight-current-row style="width: 100%;" header-align="center" show-overflow-tooltip @current-change="rowSelect">
-          <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
+      <div v-if="common" class="common-container">
+        <el-table v-show="!useCheckbox" ref="table" v-loading="listLoading" :height="gridHeight" :data="dataList" border highlight-current-row style="width: 100%;" header-align="center" @current-change="rowSelect">
+          <el-table-column v-for="header in headers" :key="header.key" :label="header.name" :align="header.align" :width="header.width" header-align="center" show-overflow-tooltip>
             <template v-slot="{row}">
-              <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
-              <span v-else>{{ row[header.key] }}</span>
+              <div v-html="filterHtml(row, header.key, header.type)" />
             </template>
           </el-table-column>
           <slot name="rows" />
         </el-table>
 
-        <el-table v-show="useCheckbox" v-loading="listLoading" :data="dataList" border style="width: 100%;" header-align="center" show-overflow-tooltip @selection-change="rowSelect">
+        <el-table v-show="useCheckbox" ref="table" v-loading="listLoading" :data="dataList" border style="width: 100%;" header-align="center" @selection-change="rowSelect">
           <el-table-column type="selection" align="center" width="40" />
-          <el-table-column v-for="header in headers" :key="header.key" :label="header.name" align="center" :width="header.width">
+          <el-table-column v-for="header in headers" :key="header.key" :label="header.name" :align="header.align" :width="header.width" header-align="center" show-overflow-tooltip>
             <template v-slot="{row}">
-              <span>{{ row[header.key] }}</span>
+              <div v-html="filterHtml(row, header.key, header.type)" />
             </template>
           </el-table-column>
           <slot name="rows" />
@@ -60,7 +59,7 @@
       </div>
 
       <!-- useVscroll true -->
-      <div v-else-if="vscroll" class="grid-container">
+      <div v-else-if="vscroll" class="vscroll-container">
         <virtual-scroll
           ref="virtualScroll"
           name="VirtualScroll"
@@ -71,7 +70,8 @@
           @change="(dataList) => tableData = dataList"
         >
           <el-table
-            v-show="!useCheckbox"
+            v-if="!useCheckbox"
+            ref="table"
             v-loading="listLoading"
             :data="tableData"
             :stripe="stripe"
@@ -83,14 +83,14 @@
           >
             <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
               <template v-slot="{row}">
-                <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
-                <span v-else>{{ row[header.key] }}</span>
+                <div v-html="filterHtml(row, header.key, header.type)" />
               </template>
             </el-table-column>
           </el-table>
 
           <el-table
-            v-show="useCheckbox"
+            v-if="useCheckbox"
+            ref="table"
             v-loading="listLoading"
             :data="tableData"
             :stripe="stripe"
@@ -98,13 +98,12 @@
             :height="gridHeight+'px'"
             style="width: 100%"
             row-key="no"
-            @current-change="rowSelect"
+            @selection-change="rowSelect"
           >
             <el-table-column type="selection" align="center" width="50" />
             <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
               <template v-slot="{row}">
-                <span v-if="row.errorYn === 'Y'" style="color:red">{{ row[header.key] }}</span>
-                <span v-else>{{ row[header.key] }}</span>
+                <div v-html="filterHtml(row, header.key, header.type)" />
               </template>
             </el-table-column>
           </el-table>
@@ -224,27 +223,14 @@ export default {
         }
       },
       immediate: true
-    },
-    dataList: {
-      handler: function() {
-        // 2023.05.03 msy : data로드 후, x-scroll & y-scroll 높이 조정 (if useCommon true)
-        if (this.useCommon) {
-          const table = document.querySelector('.el-table>.el-table__body-wrapper.is-scrolling-left')
-          const header = document.querySelector('.el-table .el-table__header-wrapper')
-          if (table) {
-            table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
-          }
-        } else {
-          // 2023.05.02 msy : data로드 후, x-scroll & y-scroll 높이 조정 (if useVscroll true)
-          const table = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__body-wrapper.is-scrolling-left')
-          const header = document.querySelector('.el-table-virtual-scroll .el-table .el-table__header-wrapper')
-          if (table) {
-            table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
-          }
-        }
-      },
-      deep: true
     }
+  },
+  mounted() {
+    // when mounted end then
+    this.$nextTick(() => {
+      console.log(this.gridName + 'grid mounted')
+      this.setGridHeight()
+    })
   },
   methods: {
     rowSelect(row) {
@@ -262,8 +248,42 @@ export default {
         this.dataList.splice(this.dataList.findIndex((value) => value.no === this.selectedRow.no), 1)
       }
     },
-    handleSelectionChange(selectedRow) {
-      this.selectedRow = selectedRow
+    // 2023.05.09 filterHtml 추가 (type이 number인 경우, 3자리마다 콤마 추가)
+    filterHtml(row, key, type) {
+      const html = {
+        openTag: '<span>',
+        value: '',
+        closeTag: '</span>'
+      }
+      if (row.errorYn === 'Y') {
+        html.openTag = '<span style="color:red">'
+      }
+      if (row[key] != null && row[key] !== '') {
+        // type이 number인 경우, 3자리마다 콤마 추가
+        if (type != null && type === 'number') {
+          html.value = row[key].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+        } else {
+          html.value = row[key]
+        }
+      }
+      return html.openTag + html.value + html.closeTag
+    },
+    setGridHeight() {
+      if (this.common) {
+        const table = document.querySelector('.common-container .el-table>.el-table__body-wrapper.is-scrolling-left')
+        const header = document.querySelector('.common-container .el-table .el-table__header-wrapper')
+        if (table) {
+          table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+          table.style.minHeight = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+        }
+      } else {
+        const table = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__body-wrapper.is-scrolling-left')
+        const header = document.querySelector('.el-table-virtual-scroll .el-table .el-table__header-wrapper')
+        if (table) {
+          table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+          table.style.minHeight = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+        }
+      }
     }
 
   }
@@ -272,3 +292,4 @@ export default {
 
 <style scoped>
 </style>
+

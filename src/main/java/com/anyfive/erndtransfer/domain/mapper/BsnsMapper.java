@@ -10,13 +10,14 @@ import com.anyfive.erndtransfer.domain.dto.*;
 @Mapper // Mapper로 등록 시킨다.
 public interface BsnsMapper {
 
-     List<BsnsDto> retriveBsnsList(BsnsDto bsnsDto);
-     
-    List<BsnsTempDto> retriveBsnsTempList(BsnsTempDto dto);
-     
-     void registBsns(BsnsDto bsnsDto);
-     
-     void registBsnsTemp(BsnsTempDto bsnsDto);
+    List<BsnsDto> retriveBsnsList(BsnsDto bsnsDto);
 
-     
+    List<BsnsTempDto> retriveBsnsTempList(BsnsTempDto dto);
+
+    void registBsns(BsnsDto bsnsDto);
+
+    void registBsnsTemp(BsnsTempDto bsnsDto);
+
+    List<BsnsExcelDto> retriveBsnsExcelList(BsnsExcelDto bsnsExcelDto);
+
 }

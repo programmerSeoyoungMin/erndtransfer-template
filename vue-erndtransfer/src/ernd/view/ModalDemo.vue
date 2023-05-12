@@ -35,7 +35,7 @@ export default {
   methods: {
     downloadBtnClick() {
       // fileName 파라미터에 다운로드 될 파일명을 입력함.
-      const downloadUrl = 'http://localhost:8080/file/download?fileName=BSNS_CD.xlsx'
+      const downloadUrl = 'http://localhost:8080/file/templates/download?fileName=BSNS_CD.xlsx'
       Axios.get(downloadUrl, {
         responseType: 'blob' // 응답 데이터 타입
       }).then(response => {
@@ -58,7 +58,7 @@ export default {
       // excelUploadModal.vue의 file 가져오기
       const formData = new FormData()
       formData.append('file', file) // 파일 데이터 추가
-      formData.append('gbn', 'bsns')
+      formData.append('category', 'bsns')
       const config = {
         headers: {
           'Content-Type': 'multipart/form-data' // 헤더 설정

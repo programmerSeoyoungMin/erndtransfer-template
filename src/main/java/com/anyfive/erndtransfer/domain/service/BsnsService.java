@@ -9,6 +9,7 @@ import com.anyfive.erndtransfer.domain.mapper.*;
 import lombok.RequiredArgsConstructor;
 
 import com.anyfive.erndtransfer.domain.dto.BsnsDto;
+import com.anyfive.erndtransfer.domain.dto.BsnsExcelDto;
 import com.anyfive.erndtransfer.domain.dto.BsnsTempDto;
 
 
@@ -17,7 +18,7 @@ import com.anyfive.erndtransfer.domain.dto.BsnsTempDto;
 public class BsnsService {
   
   private final BsnsMapper bsnsMapper;
- 
+
   public List<BsnsDto> retriveBsnsList(BsnsDto bsnsDto) {
     return bsnsMapper.retriveBsnsList(bsnsDto);
   }
@@ -44,6 +45,10 @@ public class BsnsService {
     bsnsDto.setLimit(null);
     int totalCnt = bsnsMapper.retriveBsnsList(bsnsDto).size();
     return totalCnt;
+  }
+
+  public List<BsnsExcelDto> retriveBsnsExcelList(BsnsExcelDto bsnsExcelDto) {
+    return bsnsMapper.retriveBsnsExcelList(bsnsExcelDto);
   }
 
 }

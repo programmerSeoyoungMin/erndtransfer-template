@@ -16,5 +16,6 @@ public class HeaderDto {
   private String name;
   private String width;
   private String align;
+  private String type;
   
 }

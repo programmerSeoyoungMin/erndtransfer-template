@@ -1,31 +1,46 @@
 package com.anyfive.erndtransfer.domain.controller;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.anyfive.erndtransfer.domain.dto.BsnsTempDto;
+import com.anyfive.erndtransfer.domain.dto.ItepdTempDto;
 import com.anyfive.erndtransfer.domain.service.BsnsService;
+import com.anyfive.erndtransfer.domain.service.ExcelService;
+import com.anyfive.erndtransfer.domain.service.ItepdService;
+import com.anyfive.erndtransfer.domain.util.ExcelWriter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,26 +49,35 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ExcelController<T> {
   
+  private final ExcelService excelService;
   private final BsnsService bsnsService;
+  private final ItepdService itepdService;
+
   
   @PostMapping("/upload")
-  public List<HashMap<String,String>> uploadExcelFile(@RequestParam("file") MultipartFile file, @RequestParam("gbn") String gbn) throws Exception{
+  public HashMap<String,String> uploadExcelFile(@RequestParam("file") MultipartFile file, @RequestParam("category") String category) throws Exception{
     // 업로드된 파일 처리 
     
-    String filePath = "C:\\uploads\\" + file.getOriginalFilename();
-    // 파일 저장
-    byte[] bytes = file.getBytes();
-    Path path = Paths.get(filePath);
-    Files.write(path, bytes);
-    List<HashMap<String, String>> excelData = new ArrayList<>();
+    // 엑셀 파일을 읽어서 Temp Table에 저장
+    saveExcelFileTempTable(file, category);
     
-    excelData = saveExcelFileTempTable(filePath, gbn);
-    return excelData;  
+    HashMap<String,String> resultMap = new HashMap<String,String>();
+    resultMap.put("result", "success");
+    String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    resultMap.put("uploadDe",today);
+    resultMap.put("uploadFileNm", file.getOriginalFilename());
+    
+    return resultMap;  
   }
 
-  private List<HashMap<String,String>> saveExcelFileTempTable(String path, String gbn) throws Exception {
+  private List<HashMap<String,String>> saveExcelFileTempTable(MultipartFile file, String category) throws Exception {
+    File convFile = new File( file.getOriginalFilename() );
+    FileOutputStream fos = new FileOutputStream( convFile );
+    fos.write( file.getBytes() );
+    fos.close();
+    
     // 1. 엑셀 파일을 읽어서 List<HashMap<String,String>>에 담기
-    FileInputStream fis = new FileInputStream(path);
+    FileInputStream fis = new FileInputStream(convFile);
     Workbook workbook = WorkbookFactory.create(fis);
     Sheet sheet = workbook.getSheetAt(0);
     
@@ -82,18 +106,27 @@ public class ExcelController<T> {
         dataList.add(dataMap);
     }
     
-    if (gbn.equals("bsns")) {
+    if (category.equals("bsns")) {
       // BSNS TEMP 테이블에 저장
-      // BSNS TEMP 테이블에서 오류와 함께 조회한결과 리턴
       for (var data : dataList) {
           BsnsTempDto dto = createObject(BsnsTempDto.class, data);
           String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
           dto.setUploadDe(today);
-          dto.setUploadFileNm(path.replace("C:\\uploads\\", ""));
+          dto.setUploadFileNm(file.getOriginalFilename());
           dto.setExcelRowNum(dataList.indexOf(data)+2);
           bsnsService.registBsnsTemp(dto);
       }
-    } 
+    }else if (category.equals("itepd")) {
+      // ITEPD TEMP 테이블에 저장
+      for(var data : dataList) {
+        ItepdTempDto dto = createObject(ItepdTempDto.class, data);
+        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        dto.setUploadDe(today);
+        dto.setUploadFileNm(file.getOriginalFilename());
+        dto.setExcelRowNum(dataList.indexOf(data)+2);
+        itepdService.registItepdTemp(dto);
+      }
+    }
     return dataList;
   }
   
@@ -124,13 +157,14 @@ public class ExcelController<T> {
   }
 
   private String getCellValueToString(Cell cell) {
-    int cellType = cell.getCellType();
     String cellValue = "";
+    CellType cellType = cell.getCellType();
+    
     switch (cellType) {
-        case Cell.CELL_TYPE_STRING:
+        case STRING:
             cellValue = cell.getStringCellValue();
             break;
-        case Cell.CELL_TYPE_NUMERIC:
+        case NUMERIC:
             if (DateUtil.isCellDateFormatted(cell)) {
                 cellValue = cell.getDateCellValue().toString();
             } else {
@@ -138,13 +172,13 @@ public class ExcelController<T> {
                 cellValue = String.valueOf(Math.round(cell.getNumericCellValue()));
             }
             break;
-        case Cell.CELL_TYPE_BOOLEAN:
+        case BOOLEAN:
             cellValue = String.valueOf(cell.getBooleanCellValue());
             break;
-        case Cell.CELL_TYPE_FORMULA:
+        case FORMULA:
             cellValue = cell.getCellFormula();
             break;
-        case Cell.CELL_TYPE_BLANK:
+        case BLANK:
             cellValue = "";
             break;
         default:
@@ -153,5 +187,37 @@ public class ExcelController<T> {
     return cellValue;
   }
   
+  
+  @PostMapping("/download")
+  public ResponseEntity<Resource> excelDownload(@RequestBody HashMap<String,Object> paramObj) throws IOException {
+
+    Map<String, Object> excelData = excelService.excelDownload(paramObj);
+    
+    ExcelWriter excelWriter = new ExcelWriter();
+    excelWriter.setWorkbook();
+    excelWriter.setData(excelData);
+    excelWriter.create();
+
+    Workbook workbook = excelWriter.getWorkbook();
+    
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    workbook.write(out);
+    workbook.close();
+    out.close();
+    byte[] data = out.toByteArray();
+    
+    ByteArrayResource resource = new ByteArrayResource(data);
+
+    HttpHeaders headers = new HttpHeaders();
+    //  response 시, 파일이 다운로드 되도록 설정.
+    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    headers.setContentLength(data.length);
+    headers.setContentDispositionFormData("attachment", excelWriter.getFileName());
+    
+    return ResponseEntity.ok()
+              .headers(headers)
+              .body(resource);
+    
+  }
   
 }

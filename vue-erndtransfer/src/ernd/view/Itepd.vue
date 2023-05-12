@@ -4,46 +4,50 @@
     <!-- child name(required) : 소메뉴명 -->
     <!-- parent link : 대메뉴링크 -->
     <!-- child link : 소메뉴링크 -->
-    <page-info :parent-name="'데이터 정제'" :child-name="'사업'" :parent-link="'/ernd/bsns'" :child-link="'/ernd/bsns'" />
+    <page-info :parent-name="'데이터 정제'" :child-name="'비목'" :parent-link="'/ernd/itepd'" :child-link="'/ernd/itepd'" />
 
     <!-- 검색 영역, 박스 및 검색 버튼 자동 적용. 검색 버튼 작동 함수는 @onSearch에 적용 -->
-    <div ref="bsnsSearchBox">
-      <search-table :model="bsnsSearchForm" @onSearch="search">
+    <div ref="itepdSearchBox">
+      <search-table :model="itepdSearchForm" @onSearch="search">
         <!-- 아래 slot 안에 검색 조건 추가 -->
         <template v-slot:body>
+
           <el-col :span="9">
-            <el-form-item label-width="130px" label="e-R&D 사업코드">
-              <el-input v-model="bsnsSearchForm.erndBsnsCd" placeholder="" />
+            <el-form-item label-width="130px" label="e-R&D 비목코드">
+              <el-select v-model="itepdSearchForm.erndIoeCd" filterable clearable placeholder="코드명을 입력하십시오.">
+                <el-option v-for="item in erndIoeCdOptions" :key="item.erndIoeCd" :label="item.erndIoeNm" :value="item.erndIoeCd" />
+              </el-select>
             </el-form-item>
           </el-col>
 
           <el-col :span="9">
-            <el-form-item label-width="180px" label="IRIS 사업코드">
-              <el-input ref="irisBsnsCd" v-model="bsnsSearchForm.irisBsnsCd" placeholder="" />
+            <el-form-item label-width="180px" label="e-R&D 비목명">
+              <el-input v-model="itepdSearchForm.erndIoeNm" placeholder="" />
             </el-form-item>
           </el-col>
 
           <el-col :span="9">
-            <el-form-item label-width="130px" label="e-R&D 사업년도">
-              <el-date-picker v-model="bsnsSearchForm.seleYy" type="year" format="yyyy" placeholder="선택" />
+            <el-form-item label-width="130px" label="IRIS 비목코드">
+              <el-select v-model="itepdSearchForm.irisItepdCd" filterable clearable placeholder="코드명을 입력하십시오.">
+                <el-option v-for="item in irisItepdCdOptions" :key="item.irisItepdCd" :label="item.irisItepdCdNm" :value="item.irisItepdCd" />
+              </el-select>
             </el-form-item>
           </el-col>
 
           <el-col :span="9">
-            <el-form-item label-width="180px" label="e-R&D 매핑여부">
-              <el-radio v-model="bsnsSearchForm.mappingYn" label="Y" aria-checked="checked">Y</el-radio>
-              <el-radio v-model="bsnsSearchForm.mappingYn" label="N">N</el-radio>
+            <el-form-item label-width="180px" label="IRIS 비목명">
+              <el-input v-model="itepdSearchForm.irisItepdCdNm" placeholder="" />
             </el-form-item>
           </el-col>
+
         </template>
       </search-table>
     </div>
     <!-- modal component -->
     <ExcelUploadModal
       v-if="showModal"
-      ref="excelUploadModal"
-      :excel-title="'사업 정제데이터 엑셀업로드'"
-      :task-se-tbl-nm="'IRIS_BSNS_CD_MAP_TEMP'"
+      :excel-title="'비목 정제데이터 엑셀업로드'"
+      :task-se-tbl-nm="'IRIS_ITEPD_MAP_TEMP'"
       :excel-data-list="excelDataList"
       :list-loading="listLoadingModal"
       @onUploadBtnClick="uploadBtnClick"
@@ -53,7 +57,7 @@
     />
     <div class="gridContainer">
       <grid
-        :grid-name="'사업 목록'"
+        :grid-name="'비목 목록'"
         :headers="headers"
         :data-list="dataList"
         :list-loading="listLoading"
@@ -102,11 +106,13 @@ export default {
       headers: [],
       dataList: [],
       selectedRow: null,
-      bsnsSearchForm: {
-        erndBsnsCd: '',
-        irisBsnsCd: '',
-        seleYy: '',
-        mappingYn: 'Y'
+      erndIoeCdOptions: [],
+      irisItepdCdOptions: [],
+      itepdSearchForm: {
+        erndIoeCd: '',
+        erndIoeNm: '',
+        irisItepdCd: '',
+        irisItepdCdNm: ''
       },
       // modal data
       showModal: false,
@@ -114,61 +120,41 @@ export default {
       excelDataList: []
     }
   },
-  watch: {
-    'bsnsSearchForm.mappingYn': function(val) {
-      const irisBsnsCd = this.$refs['irisBsnsCd'].$el.querySelector('input')
-      if (val === 'N') {
-        irisBsnsCd.value = ''
-        irisBsnsCd.disabled = true
-        irisBsnsCd.style.backgroundColor = 'lightgray'
-      } else {
-        irisBsnsCd.disabled = false
-        irisBsnsCd.style.backgroundColor = '#FFFFFF'
-      }
-    }
+  created() {
+    this.getCode()
   },
   mounted() {
-    const today = new Date()
-    this.bsnsSearchForm.seleYy = today.getFullYear() + ''
     this.search()
   },
   methods: {
+    async getCode() {
+      const erndCdResponse = await Axios.get('http://localhost:8080/itepd/retriveErndIoeCdList')
+      this.erndIoeCdOptions = erndCdResponse.data
+      const irisCdResponse = await Axios.get('http://localhost:8080/itepd/retriveIrisItepdCdList')
+      this.irisItepdCdOptions = irisCdResponse.data
+    },
     search() {
       this.listLoading = true
 
-      const searchParams = this.bsnsSearchForm
+      const searchParams = this.itepdSearchForm
       // pagingInfo 검색조건 설정
-      searchParams.seleYy = new Date(this.bsnsSearchForm.seleYy).getFullYear() + ''
       searchParams.currentPage = this.pager.currentPage
       searchParams.limit = this.pager.limit
 
-      if (searchParams.mappingYn === 'N') {
-        const headerDto = {
-          taskSeTblNm: 'IRIS_BSNS_CD_MAP_N'
-        }
-        Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
-          .then(response => {
-            this.headers = response.data
-          })
-          .catch(error => {
-            console.log(error)
-          })
-      } else {
-        const headerDto = {
-          taskSeTblNm: 'IRIS_BSNS_CD_MAP'
-        }
-        Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
-          .then(response => {
-            this.headers = response.data
-          })
-          .catch(error => {
-            console.log(error)
-          })
+      const headerDto = {
+        taskSeTblNm: 'IRIS_ITEPD_MAP'
       }
-
-      Axios.post('http://localhost:8080/bsns/retriveBsnsList', searchParams)
+      Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
         .then(response => {
-          this.dataList = response.data.bsnsList
+          this.headers = response.data
+        })
+        .catch(error => {
+          console.log(error)
+        })
+
+      Axios.post('http://localhost:8080/itepd/retriveItepdList', searchParams)
+        .then(response => {
+          this.dataList = response.data.itepdList
           this.pager.total = response.data.totalCnt
         })
         .catch(error => {
@@ -185,6 +171,7 @@ export default {
     rowSelect(row) {
       console.log(row)
       this.selectedRow = row
+      console.log(this.selectedRow)
     },
     excelUploadClick() {
       this.showModal = true
@@ -192,10 +179,9 @@ export default {
     excelDownloadClick() {
       const downloadUrl = 'http://localhost:8080/excel/download'
       const downloadParam = {
-        'paramObj': this.bsnsSearchForm,
-        'divCd': 'BSNS'
+        'paramObj': this.itepdSearchForm,
+        'divCd': 'ITEPD'
       }
-      confirm('화면에 표시된 항목만 다운로드 하시겠습니까?\n취소버튼을 누르시면 사업정보 전체 데이터가 다운로드 됩니다.') ? downloadParam.bsnsDivCd = 'BSNS_GRID' : downloadParam.bsnsDivCd = 'BSNS_ALL'
       Axios.post(downloadUrl, downloadParam,
         {
           'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정합니다.
@@ -203,9 +189,9 @@ export default {
         const downloadInfo = {
           blob: new Blob([response.data], { type: 'application/octet-stream' }),
           link: document.createElement('a'),
-          fileNm: '사업_' + this.bsnsSearchForm.seleYy
+          fileNm: '비목'
         }
-        if (this.bsnsSearchForm.mappingYn === 'N') {
+        if (this.itepdSearchForm.mappingYn === 'N') {
           downloadInfo.fileNm = downloadInfo.fileNm + '_미매핑'
         } else {
           downloadInfo.fileNm = downloadInfo.fileNm + '_매핑'
@@ -222,14 +208,14 @@ export default {
     // modal methods
     downloadBtnClick() {
       // fileName 파라미터에 다운로드 될 파일명을 입력함.
-      const downloadUrl = 'http://localhost:8080/file/templates/download?fileName=BSNS_CD.xlsx'
+      const downloadUrl = 'http://localhost:8080/file/templates/download?fileName=ITEPD_CD.xlsx'
       Axios.get(downloadUrl, {
         responseType: 'blob' // 응답 데이터 타입
       }).then(response => {
         const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
         link.href = url
-        link.setAttribute('download', '사업_엑셀업로드서식.xlsx') // 다운로드될 파일이름
+        link.setAttribute('download', '비목_엑셀업로드서식.xlsx') // 다운로드될 파일이름
         document.body.appendChild(link)
         link.click()
       })
@@ -246,7 +232,7 @@ export default {
       // excelUploadModal.vue의 file 가져오기
       const formData = new FormData()
       formData.append('file', file) // 파일 데이터 추가
-      formData.append('category', 'bsns')
+      formData.append('category', 'itepd')
       const config = {
         headers: {
           'Content-Type': 'multipart/form-data' // 헤더 설정
@@ -254,23 +240,34 @@ export default {
       }
       Axios.post('http://localhost:8080/excel/upload', formData, config)
         .then(response => {
-          const bsnsTempConfig = {
+          const itepdTempConfig = {
             uploadDe: response.data.uploadDe,
             uploadFileNm: response.data.uploadFileNm
           }
-          this.retriveBsnsTempList(bsnsTempConfig.uploadDe, bsnsTempConfig.uploadFileNm)
+          // Axios config setting
+          Axios.get('http://localhost:8080/itepd/retriveItepdTempList?uploadDe=' + itepdTempConfig.uploadDe + '&uploadFileNm=' + itepdTempConfig.uploadFileNm)
+            .then(response => {
+              this.excelDataList = response.data
+            })
+            .catch(error => {
+              console.log(error)
+            })
+            .finally(() => {
+              this.listLoadingModal = false
+            })
         })
         .catch(error => {
           console.log(error)
           return result
-        }).finally(() => {
+        })
+        .finally(() => {
           this.listLoadingModal = false
         })
     },
     saveBtnClick() {
       const result = true
       this.listLoadingModal = true
-      Axios.post('http://localhost:8080/bsns/saveBsnsList', this.excelDataList)
+      Axios.post('http://localhost:8080/itepd/saveItepdList', this.excelDataList)
         .then(response => {
 
         })
@@ -279,17 +276,14 @@ export default {
         })
         .finally(() => {
           this.listLoadingModal = false
-        })
+        }
+        )
       return result
     },
     // modal close시, excelDataList 초기화
     closeBtnClick() {
       this.excelDataList = []
       this.showModal = false
-    },
-    async retriveBsnsTempList(uploadDe, uploadFileNm) {
-      const retriveBsnsTempList = await Axios.get('http://localhost:8080/bsns/retriveBsnsTempList?uploadDe=' + uploadDe + '&uploadFileNm=' + uploadFileNm)
-      this.excelDataList = retriveBsnsTempList.data
     }
   }
 }

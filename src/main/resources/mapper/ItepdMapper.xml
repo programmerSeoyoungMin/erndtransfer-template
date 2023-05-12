@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.ItepdMapper">
+
+    <sql id="itepdField">
+      ERND_IOE_CD,
+      ERND_IOE_NM,
+      ERND_UPR_IOE_CD,
+      ERND_IOE_TP,
+      CASE WHEN ERND_IOE_TP = 0 THEN '비목'
+           WHEN ERND_IOE_TP = 1 THEN '현금'
+           WHEN ERND_IOE_TP = 2 THEN '현물'
+           WHEN ERND_IOE_TP = 3 THEN '미지급' END AS ERND_IOE_TP_NM,
+      IRIS_ITEPD_GRP_CD,
+      '['|| IRIS_ITEPD_GRP_CD || ']' || (SELECT ITEPD_GRP_CD_NM FROM IRIS_ITEPD_GRP_CD WHERE ITEPD_GRP_CD = IRIS_ITEPD_GRP_CD) AS IRIS_ITEPD_GRP_CD_NM,
+      IRIS_ITEPD_CD,
+      IRIS_ITEPD_CD_NM,
+      IRIS_UPR_ITEPD_CD
+    </sql>
+
+    <select id="retriveItepdList" resultType="ItepdDto" parameterType="ItepdDto">      
+    SELECT  ROWNUM AS NO,
+            <include refid="itepdField"/>
+      FROM  IRIS_ITEPD_MAP
+      WHERE 1=1
+      <if test="erndIoeCd != null and erndIoeCd != ''">
+          AND ERND_IOE_CD LIKE '%'||UPPER(#{erndIoeCd})||'%' 
+      </if>
+      <if test="irisItepdCd != null and irisItepdCd != ''">
+          AND IRIS_ITEPD_CD LIKE '%'||UPPER(#{irisItepdCd})||'%'
+      </if>
+      <if test="erndIoeNm != null and erndIoeNm != ''">
+          AND ERND_IOE_NM LIKE '%'||UPPER(#{erndIoeNm})||'%' 
+      </if>
+      <if test="irisItepdCdNm != null and irisItepdCdNm != ''">
+          AND IRIS_ITEPD_CD_NM LIKE '%'||UPPER(#{irisItepdCdNm})||'%'
+      </if>
+      <if test="limit != null">
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+      </if>
+    </select>
+  
+  
+    
+  <select id="retriveItepdTempList" resultType="ItepdTempDto" parameterType="ItepdTempDto">      
+    SELECT
+          ROWNUM as NO,
+          '' AS ERROR_MSG,
+          UPLOAD_DE,
+          UPLOAD_FILE_NM,
+          EXCEL_ROW_NUM,
+          <include refid="itepdField"/>
+          ,
+          /* 오류여부 테스트용 */
+          CASE WHEN MOD(ROWNUM, 2) = 1 THEN 'Y' ELSE 'N' END AS ERROR_YN 
+    FROM  IRIS_ITEPD_MAP_TEMP
+    WHERE 1=1
+    <if test="uploadDe != null and uploadDe != ''">
+        AND UPLOAD_DE = #{uploadDe}
+    </if>
+    <if test="uploadFileNm != null and uploadFileNm != ''">
+        AND UPLOAD_FILE_NM = #{uploadFileNm}
+    </if>  
+    </select>
+    
+    <select id="retriveItepdExcelList" resultType="ItepdExcelDto" parameterType="ItepdExcelDto">
+      SELECT  ROWNUM AS NO,
+            <include refid="itepdField"/>
+      FROM IRIS_ITEPD_MAP
+      WHERE 1=1
+      <if test="erndIoeCd != null and erndIoeCd != ''">
+          AND ERND_IOE_CD = #{erndIoeCd}
+      </if>
+      <if test="irisItepdCd != null and irisItepdCd != ''">
+          AND IRIS_ITEPD_CD = #{irisItepdCd}
+      </if>
+      <if test="erndIoeNm != null and erndIoeNm != ''">
+          AND ERND_IOE_NM LIKE '%'||UPPER(#{erndIoeNm})||'%' 
+      </if>
+      <if test="irisItepdCdNm != null and irisItepdCdNm != ''">
+          AND IRIS_ITEPD_CD_NM LIKE '%'||UPPER(#{irisItepdCdNm})||'%'
+      </if>
+    </select>
+    
+    <sql id="itepdParamField">
+        #{erndIoeCd},
+        #{erndIoeNm},
+        #{erndUprIoeCd},
+        #{erndIoeTp},
+        #{irisItepdGrpCd},
+        #{irisItepdCd},
+        #{irisItepdCdNm},
+        #{irisUprItepdCd}
+    </sql>
+    
+    <insert id="registItepd" parameterType="ItepdDto">
+      INSERT INTO IRIS_ITEPD_MAP
+      ( NO,
+        <include refid="itepdField"/>
+      ) VALUES
+      (
+        (SELECT NVL(MAX(NO),0)+1 FROM IRIS_ITEPD_MAP),
+        <include refid="itepdParamField"></include>
+      )
+    </insert>
+    
+    <insert id="registItepdTemp" parameterType="ItepdTempDto">
+      INSERT INTO IRIS_ITEPD_MAP_TEMP
+      (
+        UPLOAD_DE,
+        UPLOAD_FILE_NM,
+        EXCEL_ROW_NUM,
+        ERND_IOE_CD,
+        ERND_IOE_NM,
+        ERND_UPR_IOE_CD,
+        ERND_IOE_TP,
+        IRIS_ITEPD_GRP_CD,
+        IRIS_ITEPD_CD,
+        IRIS_ITEPD_CD_NM,
+        IRIS_UPR_ITEPD_CD
+      ) VALUES
+      (
+        #{uploadDe},
+        #{uploadFileNm},
+        #{excelRowNum},
+        <include refid="itepdParamField"></include>
+      )
+    </insert>
+    
+    <!-- 코드정보 -->
+    <select id="retriveErndIoeCdList" resultType="ItepdDto">
+      SELECT DISTINCT ERND_IOE_CD, ERND_IOE_NM FROM IRIS_ITEPD_MAP ORDER BY ERND_IOE_CD
+    </select>
+    <select id="retriveIrisItepdCdList" resultType="ItepdDto">
+      SELECT DISTINCT IRIS_ITEPD_CD, IRIS_ITEPD_CD_NM FROM IRIS_ITEPD_MAP ORDER BY IRIS_ITEPD_CD
+    </select>
+</mapper>

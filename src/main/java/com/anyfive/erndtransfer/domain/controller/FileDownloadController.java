@@ -18,11 +18,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @RestController
 @RequestMapping("/file")
 public class FileDownloadController {
     
-    @GetMapping("/download")
+    @GetMapping("/templates/download")
     public ResponseEntity<Resource> downloadFile(HttpServletRequest request) throws IOException, URISyntaxException {
         // 파일명을 파라미터로 전달
         String fileName = request.getParameter("fileName");
@@ -65,4 +66,5 @@ public class FileDownloadController {
                 .contentLength(resource.getFile().length())
                 .body(resource);
     }
+    
 }

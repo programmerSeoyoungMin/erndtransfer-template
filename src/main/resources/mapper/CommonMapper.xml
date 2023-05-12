@@ -9,9 +9,11 @@
             ARTCL_ID AS KEY,
             ARTCL_NM AS NAME,
             ARTCL_SZ || 'px' AS WIDTH,
-            ARTCL_SORT_CRTR_NM AS ALIGN
+            ARTCL_SORT_CRTR_NM AS ALIGN,
+            ARTCL_TYPE AS TYPE
       FROM  ERND_ARTCL_INFO 
       WHERE TASK_SE_TBL_NM = #{taskSeTblNm}
+      ORDER BY ARTCL_ORD
     </select>
 
 </mapper>
