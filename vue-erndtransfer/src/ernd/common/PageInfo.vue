@@ -3,9 +3,9 @@
     <div style="float: right; margin-right: 20px">
       <i class="el-icon-s-home" />
       <span v-show="parentName">
-        <el-link :href="parentLink"> {{ parentName }} </el-link> >
+        <router-link :to="parentLink"> {{ parentName }} </router-link> >
       </span>
-      <el-link :href="childLink"> {{ childName }} </el-link>
+      <router-link :to="childLink"> {{ childName }} </router-link>
     </div>
 
     <div class="app-container">
