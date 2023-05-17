@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.SbjtMapper">
+    <select id="retriveSbjtList" resultType="SbjtDto" parameterType="SbjtDto">
+        SELECT  ROWNUM AS SEQ,
+                SBJT_NO AS IRIS_SBJT_NO,
+                BIZ_YR AS IRIS_FLFMT_YY,
+                ERND_SBJT_NO AS ERND_SBJT_NO,
+                BIZ_REQST_YR AS ERND_SBJT_YY
+        FROM IRIS_SBJT_MAP
+        WHERE 1=1
+        <if test="erndSbjtNo != null and erndSbjtNo != ''">
+            AND ERND_SBJT_NO = #{erndSbjtNo}
+        </if>
+        <if test="irisSbjtNo != null and irisSbjtNo != ''">
+            AND SBJT_NO = #{irisSbjtNo}
+        </if>
+        <if test="erndFlfmtYy != null and erndFlfmtYy != ''">
+            AND BIZ_REQST_YR = #{erndFlfmtYy}
+        </if>
+        <if test="sbjtStts != 'A'">
+            AND BIZ_REQST_YR = #{sbjtStts}
+        </if>
+        <if test="limit != null">
+            OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+        </if>
+    </select>
+</mapper>
