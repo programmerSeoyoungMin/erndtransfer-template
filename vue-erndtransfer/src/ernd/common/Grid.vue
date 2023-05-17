@@ -198,6 +198,12 @@ export default {
     totalCnt: {
       type: Number,
       default: 0
+    },
+    // vscroll 사용하는 경우, vscrollHeight 값을 적절하게 지정해주어야 함.
+    // grid Height Setting Bug 해결목적
+    vscrollHeight: {
+      type: Number,
+      default: 450
     }
   },
   data() {
@@ -241,10 +247,12 @@ export default {
   },
   mounted() {
     // when mounted end then
-    this.$nextTick(() => {
-      console.log(this.gridName + 'grid mounted')
-      this.setGridHeight()
-    })
+    this.setGridHeight()
+  },
+  updated() {
+    if (this.vscroll) {
+      document.querySelector('.vscroll-container').style.height = this.vscrollHeight + 'px'
+    }
   },
   methods: {
     rowSelect(row) {
@@ -307,7 +315,6 @@ export default {
         }
       }
     }
-
   }
 }
 </script>

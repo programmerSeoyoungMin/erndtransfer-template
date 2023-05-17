@@ -33,6 +33,7 @@
         :delete-btn="true"
         :grid-height="'379'"
         :use-vscroll="true"
+        :vscroll-height="440"
         @onDeleteBtnClick="deleteBtnClick"
       />
     </div>
