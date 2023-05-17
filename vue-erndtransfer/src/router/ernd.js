@@ -52,6 +52,20 @@ const erndRouter = {
           meta: { title: '개별이관(과제별)', icon: 'share-from-square-solid', noCache: true }
         }
       ]
+    },
+    {
+      path: 'result',
+      name: '데이터 이관결과',
+      component: () => import('@/ernd/view/ResultIndex'),
+      meta: { title: '데이터 이관결과', icon: 'folder-solid', noCache: true },
+      children: [
+        {
+          path: 'inquiry',
+          component: () => import('@/ernd/view/ResultInq'),
+          name: '이관결과 미리보기',
+          meta: { title: '이관결과 미리보기', icon: 'magnifying-glass-solid', noCache: true }
+        }
+      ]
     }
   ]
 }

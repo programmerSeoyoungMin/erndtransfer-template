@@ -38,7 +38,19 @@
 
       <!-- default!!! useCommon true -->
       <div v-if="common" class="common-container">
-        <el-table v-show="!useCheckbox" ref="table" v-loading="listLoading" :height="gridHeight" :data="dataList" border highlight-current-row style="width: 100%;" header-align="center" @current-change="rowSelect">
+        <el-table
+          v-show="!useCheckbox"
+          ref="table"
+          v-loading="listLoading"
+          :height="gridHeight"
+          :data="dataList"
+          border
+          highlight-current-row
+          style="width: 100%;"
+          header-align="center"
+          @current-change="rowSelect"
+          @cell-dblclick="cellDblClick"
+        >
           <el-table-column v-for="header in headers" :key="header.key" :label="header.name" :align="header.align" :width="header.width" header-align="center" show-overflow-tooltip>
             <template v-slot="{row}">
               <div v-html="filterHtml(row, header.key, header.type)" />
@@ -47,7 +59,7 @@
           <slot name="rows" />
         </el-table>
 
-        <el-table v-show="useCheckbox" ref="table" v-loading="listLoading" :data="dataList" border style="width: 100%;" header-align="center" @selection-change="rowSelect">
+        <el-table v-show="useCheckbox" ref="table" v-loading="listLoading" :data="dataList" border style="width: 100%;" header-align="center" @selection-change="rowSelect" @cell-dblclick="cellDblClick">
           <el-table-column type="selection" align="center" width="40" />
           <el-table-column v-for="header in headers" :key="header.key" :label="header.name" :align="header.align" :width="header.width" header-align="center" show-overflow-tooltip>
             <template v-slot="{row}">
@@ -80,6 +92,7 @@
             style="width: 100%"
             row-key="no"
             @current-change="rowSelect"
+            @cell-dblclick="cellDblClick"
           >
             <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
               <template v-slot="{row}">
@@ -99,6 +112,7 @@
             style="width: 100%"
             row-key="no"
             @selection-change="rowSelect"
+            @cell-dblclick="cellDblClick"
           >
             <el-table-column type="selection" align="center" width="50" />
             <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :type="header.type" :align="header.align" header-align="center" show-overflow-tooltip>
@@ -237,6 +251,9 @@ export default {
       this.selectedRow = row
       this.$emit('onRowSelect', this.selectedRow)
     },
+    cellDblClick(row, column, cell, event) {
+      this.$emit('onCellDblClick', row, column, cell, event)
+    },
     deleteBtnClick() {
       if (this.selectedRow === undefined || this.selectedRow === null || this.selectedRow.length === 0) {
         this.$alert('삭제할 행을 선택하세요.', '삭제')
@@ -262,10 +279,15 @@ export default {
         // type이 number인 경우, 3자리마다 콤마 추가
         if (type != null && type === 'number') {
           html.value = row[key].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+        // type이 popup인 경우, decoration 추가
+        } else if (type != null && type === 'popup') {
+          html.openTag = '<i class="fa-solid fa-caret-right"></i> <span style="text-decoration:underline;cursor:pointer">'
+          html.value = row[key]
         } else {
           html.value = row[key]
         }
       }
+
       return html.openTag + html.value + html.closeTag
     },
     setGridHeight() {
