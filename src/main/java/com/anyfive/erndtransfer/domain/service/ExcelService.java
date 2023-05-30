@@ -1,12 +1,9 @@
 package com.anyfive.erndtransfer.domain.service;
 
+import com.anyfive.erndtransfer.domain.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.anyfive.erndtransfer.domain.dto.BsnsExcelDto;
-import com.anyfive.erndtransfer.domain.dto.BsnsExcelGridDto;
-import com.anyfive.erndtransfer.domain.dto.ItepdDto;
-import com.anyfive.erndtransfer.domain.dto.ItepdExcelDto;
 import com.anyfive.erndtransfer.domain.util.ExcelWriter;
 
 import java.util.*;
@@ -20,6 +17,11 @@ public class ExcelService {
     
     @Autowired
     private ItepdService itepdService;
+
+    @Autowired
+    private SbjtService sbjtService;
+    @Autowired
+    private AncmService ancmService;
     
     public Map<String, Object> excelDownload(Map<String,Object> paramMap) {
       Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -55,7 +57,25 @@ public class ExcelService {
         itepdExcelDto.setIrisItepdCdNm(paramObjMap.get("irisItepdNm"));
         List<ItepdExcelDto> itepdExcelDtoList = itepdService.retriveItepdExcelList(itepdExcelDto);
         resultMap = ExcelWriter.createExcelData(itepdExcelDtoList, ItepdExcelDto.class);
+      // 과제인경 우
+      }else if(bsnsDivCd.equals("SBJT")){
+        SbjtExcelDto sbjtExcelDto = new SbjtExcelDto();
+        sbjtExcelDto.setErndSbjtNo(paramObjMap.get("erndSbjtNo"));
+        sbjtExcelDto.setErndFlfmtYy(paramObjMap.get("erndFlfmtYy"));
+        sbjtExcelDto.setIrisSbjtNo(paramObjMap.get("irisSbjtNo"));
+        sbjtExcelDto.setSbjtStts(paramObjMap.get("sbjtStts"));
+        List<SbjtExcelDto> sbjtExcelList = sbjtService.retriveSbjtExcelList(sbjtExcelDto);
+        resultMap = ExcelWriter.createExcelData(sbjtExcelList, SbjtExcelDto.class);
+        // 공고인 경우
+      }else if(bsnsDivCd.equals("ANCM")){
+        AncmExcelDto ancmExcelDto = new AncmExcelDto();
+        ancmExcelDto.setErndAncmNo(paramObjMap.get("erndAncmNo"));
+        ancmExcelDto.setIrisAncmNo(paramObjMap.get("irisAncmNo"));
+        ancmExcelDto.setErndBizYr(paramObjMap.get("erndBizYr"));
+        List<AncmExcelDto> ancmExcelList = ancmService.retriveAncmExcelList(ancmExcelDto);
+        resultMap = ExcelWriter.createExcelData(ancmExcelList, AncmExcelDto.class);
       }
+
       
       return resultMap;
     }
