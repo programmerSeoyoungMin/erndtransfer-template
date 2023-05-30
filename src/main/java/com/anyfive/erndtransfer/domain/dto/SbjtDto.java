@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SbjtDto extends PagingDto{
+    private int No;
     private String erndSbjtNo;
     private String erndFlfmtYy;
     private String erndsbjtNm;

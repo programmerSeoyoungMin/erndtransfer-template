@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.AncmMapper">
+    <select id="retriveAncmList" resultType="AncmDto" parameterType="AncmDto">
+        SELECT  ROWNUM AS NO,
+                ANCM_ID AS IRIS_ANCM_NO,
+                ANCM_SEQ AS ERND_ANCM_NO,
+                BIZ_YR AS ERND_BIZ_YR,
+                ERND_BIZ_CD AS ERND_BIZ_CD
+        FROM IRIS_ANCM_MAP
+        WHERE 1=1
+        <if test="erndAncmNo != null and erndAncmNo != ''">
+            AND ANCM_SEQ = #{erndAncmNo}
+        </if>
+        <if test="irisAncmNo != null and irisAncmNo != ''">
+            AND ANCM_ID = #{irisAncmNo}
+        </if>
+        <if test="erndBizYr != null and erndBizYr != ''">
+            AND BIZ_YR = #{erndBizYr}
+        </if>
+        <if test="limit != null">
+            OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+        </if>
+    </select>
+    <select id="retriveAncmExcelList" resultType="AncmExcelDto" parameterType="AncmExcelDto">
+        SELECT  ROWNUM AS NO,
+                ANCM_ID AS IRIS_ANCM_NO,
+                ANCM_SEQ AS ERND_ANCM_NO,
+                BIZ_YR AS ERND_BIZ_YR,
+                ERND_BIZ_CD AS ERND_BIZ_CD
+        FROM IRIS_ANCM_MAP
+        WHERE 1=1
+        <if test="erndAncmNo != null and erndAncmNo != ''">
+            AND ANCM_SEQ = #{erndAncmNo}
+        </if>
+        <if test="irisAncmNo != null and irisAncmNo != ''">
+            AND ANCM_ID = #{irisAncmNo}
+        </if>
+        <if test="erndBizYr != null and erndBizYr != ''">
+            AND BIZ_YR = #{erndBizYr}
+        </if>
+    </select>
+</mapper>

@@ -12,19 +12,19 @@
       <template v-slot:body>
         <el-col :span="9">
           <el-form-item label-width="130px" label="e-R&D 과제번호">
-            <el-input v-model="erndSbjtNo" placeholder="텍스트입력" />
+            <el-input v-model="sbjtSearchForm.erndSbjtNo" placeholder="텍스트입력" />
           </el-form-item>
         </el-col>
 
         <el-col :span="9">
           <el-form-item label-width="180px" label="IRIS 과제번호">
-            <el-input v-model="irisSbjtNo" placeholder="텍스트입력" />
+            <el-input v-model="sbjtSearchForm.irisSbjtNo" placeholder="텍스트입력" />
           </el-form-item>
         </el-col>
 
         <el-col :span="9">
           <el-form-item label-width="130px" label="e-R&D 수행년도">
-            <el-date-picker v-model="erndFlfmtYy" type="year" placeholder="년도선택" />
+            <el-date-picker v-model="sbjtSearchForm.erndFlfmtYy" type="year" placeholder="년도선택" />
           </el-form-item>
         </el-col>
 
@@ -57,7 +57,6 @@
     <grid
       :grid-name="'과제목록'"
       :headers="headers"
-      :colspan-list="colspanList"
       :data-list="dataList"
       :list-loading="listLoading"
       :use-checkbox="false"
@@ -108,9 +107,6 @@ export default {
         { key: 'irisFlfmtYy', name: 'IRIS사업년도', width: '125' },
         { key: 'irisSbjtNo', name: 'IRIS과제번호', width: '300' }
       ],
-      colspanList: [{ name: 'IRIS', strNo: 2, endNo: 5 },
-        { name: 'ERND', strNo: 6, endNo: 8 }
-      ],
       dataList: [],
       sbjtSearchForm: {
         erndSbjtNo: '',
@@ -125,9 +121,13 @@ export default {
         sbjtStts: 'C',
         label: '종료'
       }],
-      sbjtStts: '',
-      label: '전체'
+      sbjtStts: '전체'
     }
+  },
+  mounted() {
+    const today = new Date()
+    this.sbjtSearchForm.erndFlfmtYy = today.getFullYear() + ''
+    this.search()
   },
   methods: {
     search() {
@@ -163,9 +163,26 @@ export default {
       console.log(this.selectedRow)
     },
     excelDownloadClick() {
-      this.$alert('엑셀 다운로드 버튼 클릭', '엑셀 다운로드')
+      const downloadUrl = 'http://localhost:8080/excel/download'
+      const downloadParam = {
+        'paramObj': this.sbjtSearchForm,
+        'divCd': 'SBJT'
+      }
+      Axios.post(downloadUrl, downloadParam,
+        {
+          'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정합니다.
+        }).then(response => {
+        const downloadInfo = {
+          blob: new Blob([response.data], { type: 'application/octet-stream' }),
+          link: document.createElement('a')
+        }
+        downloadInfo.link.href = window.URL.createObjectURL(downloadInfo.blob)
+        downloadInfo.link.setAttribute('download', '과제.xlsx') // 다운로드될 파일이름
+        document.body.appendChild(downloadInfo.link)
+        downloadInfo.link.click()
+      })
     },
-    handleCurrentChange(value) {
+    handleCurrentChange() {
       this.search()
     }
   }

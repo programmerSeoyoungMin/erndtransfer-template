@@ -7,24 +7,24 @@
     <page-info :parent-name="'데이터 정제'" :child-name="'공고'" :parent-link="'/ernd/bsns'" :child-link="'/ernd/ancm'" />
 
     <!-- 검색 영역, 박스 및 검색 버튼 자동 적용. 검색 버튼 작동 함수는 @onSearch에 적용 -->
-    <search-table @onSearch="search">
+    <search-table :model="ancmSearchForm" @onSearch="search">
       <!-- 아래 slot 안에 검색 조건 추가 -->
       <template v-slot:body>
         <el-col :span="9">
           <el-form-item label-width="180px" label="e-R&D 접수환경번호">
-            <el-input v-model="erndAncmNo" placeholder="텍스트입력" />
+            <el-input v-model="ancmSearchForm.erndAncmNo" placeholder="텍스트입력" />
           </el-form-item>
         </el-col>
 
         <el-col :span="9">
           <el-form-item label-width="180px" label="IRIS 공고ID">
-            <el-input v-model="irisSbjtNo" placeholder="텍스트입력" />
+            <el-input v-model="ancmSearchForm.irisAncmNo" placeholder="텍스트입력" />
           </el-form-item>
         </el-col>
 
         <el-col>
           <el-form-item label-width="180px" label="e-R&D 사업년도">
-            <el-date-picker v-model="bizYr" type="year" placeholder="년도선택" />
+            <el-date-picker v-model="ancmSearchForm.bizYr" type="year" placeholder="년도선택" />
           </el-form-item>
         </el-col>
       </template>
@@ -74,6 +74,7 @@ import PageInfo from '@/ernd/common/PageInfo'
 import SearchTable from '@/ernd/common/SearchTable'
 import Grid from '@/ernd/common/Grid.vue'
 import Pagination from '@/ernd/common/Pagination.vue'
+import Axios from 'axios'
 export default {
   name: 'Sbjt',
   components: { PageInfo, SearchTable, Grid, Pagination },
@@ -84,22 +85,33 @@ export default {
         limit: 10,
         total: 1
       },
+      ancmSearchForm: {
+        erndAncmNo: '',
+        irisAncmNo: '',
+        bizYr: ''
+      },
       listLoading: false,
       headers: [{ key: 'no', name: '순번', width: '80' },
-        { key: 'sbjtStts', name: '접수환경번호', width: '100' },
-        { key: 'erndSbjtNo', name: '사업년도', width: '100' },
-        { key: 'erndsbjtNm', name: 'ERND사업코드', width: '200' },
-        { key: 'irisFlfmtYy', name: '접수환경명', width: '550' },
-        { key: 'irisSbjtNo', name: 'IRIS공고ID', width: '200' }
+        { key: 'erndAncmNo', name: 'ERND 접수환경번호', width: '150' },
+        { key: 'erndBizYr', name: 'ERND 사업년도', width: '150' },
+        { key: 'erndBizCd', name: 'ERND 사업코드', width: '200' },
+        { key: 'erndAncmNm', name: 'ERND 접수환경명', width: '450' },
+        { key: 'irisAncmNo', name: 'IRIS공고ID', width: '200' },
+        { key: 'irisBizYy', name: 'IRIS사업년도', width: '200' },
+        { key: 'irisBizCd', name: 'IRIS사업코드', width: '200' },
+        { key: 'irisAncmNm', name: 'IRIS접수환경명', width: '200' }
       ],
       dataList: [],
       selectedRow: null
     }
   },
+  mounted() {
+    const today = new Date()
+    this.ancmSearchForm.bizYr = today.getFullYear() + ''
+    this.search()
+  },
   methods: {
     search() {
-      this.listLoading = true
-
       this.$alert('current page = ' + this.pager.currentPage + ', row limit = ' + this.pager.limit, '검색')
     },
     setRowLimit(val) {
@@ -114,9 +126,26 @@ export default {
       console.log(this.selectedRow)
     },
     excelDownloadClick() {
-      this.$alert('엑셀 다운로드 버튼 클릭', '엑셀 다운로드')
+      const downloadUrl = 'http://localhost:8080/excel/download'
+      const downloadParam = {
+        'paramObj': this.ancmSearchForm,
+        'divCd': 'ANCM'
+      }
+      Axios.post(downloadUrl, downloadParam,
+        {
+          'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정합니다.
+        }).then(response => {
+        const downloadInfo = {
+          blob: new Blob([response.data], { type: 'application/octet-stream' }),
+          link: document.createElement('a')
+        }
+        downloadInfo.link.href = window.URL.createObjectURL(downloadInfo.blob)
+        downloadInfo.link.setAttribute('download', '공고.xlsx') // 다운로드될 파일이름
+        document.body.appendChild(downloadInfo.link)
+        downloadInfo.link.click()
+      })
     },
-    handleCurrentChange(value) {
+    handleCurrentChange() {
       this.search()
     }
   }
