@@ -3,7 +3,7 @@
     <page-info :parent-name="'데이터 이관'" :child-name="'전체 이관'" :parent-link="'/ernd/trns/all'" :child-link="'/ernd/trns/all'" />
     <el-container>
       <el-header style="height: 200px;">
-        <el-row :gutter="20" :align="'middle'" style="height:150px; border: 1px solid lightgray;">
+        <el-row :gutter="20" :align="'middle'" style="border: 1px solid lightgray;" type="flex">
           <el-col :span="7">
             <div v-show="prgrsPrcdExist" class="header-content">
               <h4>[이관ID : {{ trnsfInfo.trnsfId }}]</h4>
@@ -45,11 +45,10 @@
             </div>
           </el-col>
         </el-row>
-
         <!-- 이관 진행 중 -->
-        <el-row v-if="!transferEnd" h4 :align="'middle'" :justify="'center'" style="height:50px;">
+        <el-row v-if="!transferEnd" :align="'middle'" :justify="'center'" type="flex">
           <el-col :span="1">
-            <div style="margin-top:6px;">
+            <div style="margin-top:3px;">
               <el-button @click="retriveTransfer"><i class="fa-solid fa-refresh" /></el-button>
             </div>
           </el-col>
@@ -65,21 +64,20 @@
           </el-col>
         </el-row>
         <!-- 이관 종료 -->
-        <el-row v-show="transferEnd" h4 :align="'middle'" :justify="'center'" style="height:50px;">
-          <el-col :span="12">
+        <el-row v-show="transferEnd" :align="'middle'" :justify="'center'" type="flex">
+          <el-col :span="5">
             <div style="padding-left: 10px;">
               <h4>이관 진행 결과</h4>
             </div>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="19">
             <div style="display: flex;justify-content: flex-end;align-items: center;">
               <h5 style="color:red;">진행중인 이관이 없습니다. 가장 최근에 완료된 이관 정보가 표시됩니다.</h5>
             </div>
           </el-col>
         </el-row>
-
       </el-header>
-      <el-main style="border:1px solid lightgray">
+      <el-main style="border:1px solid lightgray; margin-top: 10px;">
         <el-row>
           <el-table :data="dataList" :header-row-class-name="'tableHeader'" border>
             <el-table-column prop="prcdNm" label="이관 데이터 구분" :align="'left'" width="200px" />

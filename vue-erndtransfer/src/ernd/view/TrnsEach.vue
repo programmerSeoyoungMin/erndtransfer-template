@@ -3,7 +3,7 @@
     <page-info :parent-name="'데이터 이관'" :child-name="'개별 이관'" :parent-link="'/ernd/trns/all'" :child-link="'/ernd/trns/each'" />
     <el-container>
       <el-header style="height: 200px;">
-        <el-row :gutter="20" :align="'middle'" style="height:150px; border: 1px solid lightgray;">
+        <el-row :gutter="20" :align="'middle'" style="height:150px; border: 1px solid lightgray;" type="flex">
           <el-col :span="6">
             <div v-show="prgrsPrcdExist" class="header-content">
               <h4>[이관ID : {{ trnsfInfo.trnsfId }}]</h4>
@@ -39,7 +39,7 @@
             </div>
           </el-col>
           <el-col :span="8" style="height:150px;">
-            <el-row :gutter="20" style="padding:5px">
+            <el-row :gutter="20" style="padding:5px" type="flex">
               <el-col>
                 <div class="uploadzone">
                   <div class="dropzone" @drop="handleDrop">
@@ -50,7 +50,7 @@
                 </div>
               </el-col>
             </el-row>
-            <el-row>
+            <el-row type="flex">
               <el-col>
                 <div style="display:flex; justify-content: flex-end; align-items: center; padding:5px;">
                   <el-button type="info" class="download-btn" @click="handleDownload"><i class="fa-solid fa-download" />&nbsp;&nbsp;서식 다운로드</el-button>
@@ -66,9 +66,9 @@
           </el-col>
         </el-row>
         <!-- 이관 진행 중 -->
-        <el-row v-show="!transferEnd" h4 :align="'middle'" :justify="'center'" style="height:50px;">
+        <el-row v-show="!transferEnd" h4 :align="'middle'" :justify="'center'" style="height:50px;" type="flex">
           <el-col :span="1">
-            <div style="margin-top:6px;">
+            <div>
               <el-button @click="retriveTransfer"><i class="fa-solid fa-refresh" /></el-button>
             </div>
           </el-col>
@@ -84,7 +84,7 @@
           </el-col>
         </el-row>
         <!-- 이관 종료 -->
-        <el-row v-show="transferEnd" h4 :align="'middle'" :justify="'center'" style="height:50px;">
+        <el-row v-show="transferEnd" h4 :align="'middle'" :justify="'center'" style="height:50px;" type="flex">
           <el-col :span="12">
             <div style="padding-left: 10px;">
               <h4>이관 진행 결과</h4>
@@ -98,7 +98,7 @@
         </el-row>
       </el-header>
       <el-main style="border:1px solid lightgray">
-        <el-row>
+        <el-row type="flex">
           <el-table :data="dataList" :header-row-class-name="'tableHeader'" border>
             <el-table-column prop="prcdNm" label="이관 데이터 구분" :align="'left'" width="200px" />
             <el-table-column prop="prcdPrgrsSttus" label="진행상태" :align="'center'">

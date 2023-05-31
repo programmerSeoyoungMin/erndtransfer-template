@@ -30,6 +30,18 @@ const erndRouter = {
           component: () => import('@/ernd/view/Itepd'),
           name: '비목',
           meta: { title: '비목', icon: 'file-invoice-solid', noCache: true }
+        },
+        {
+          path: 'ancm',
+          component: () => import('@/ernd/view/Ancm'),
+          name: '공고',
+          meta: { title: '공고', icon: 'briefcase-solid', noCache: true }
+        },
+        {
+          path: 'sbjt',
+          component: () => import('@/ernd/view/Sbjt'),
+          name: '과제',
+          meta: { title: '과제', icon: 'briefcase-solid', noCache: true }
         }
       ]
     },
