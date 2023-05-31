@@ -51,4 +51,8 @@ public class BsnsService {
     return bsnsMapper.retriveBsnsExcelList(bsnsExcelDto);
   }
 
+  public void deleteBsnsTemp(BsnsTempDto bsnsTempDto) {
+    bsnsMapper.deleteBsnsTemp(bsnsTempDto);
+  }
+  
 }

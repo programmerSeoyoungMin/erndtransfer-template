@@ -19,5 +19,6 @@ public interface BsnsMapper {
     void registBsnsTemp(BsnsTempDto bsnsDto);
 
     List<BsnsExcelDto> retriveBsnsExcelList(BsnsExcelDto bsnsExcelDto);
-
+  
+    void deleteBsnsTemp(BsnsTempDto bsnsTempDto);
 }

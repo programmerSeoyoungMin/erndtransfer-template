@@ -44,17 +44,25 @@
   
     
   <select id="retriveItepdTempList" resultType="ItepdTempDto" parameterType="ItepdTempDto">      
-    SELECT
-          ROWNUM as NO,
-          '' AS ERROR_MSG,
+    SELECT 
+          ROWNUM AS NO, 
+          A.*
+    FROM 
+    (          
+      SELECT
           UPLOAD_DE,
           UPLOAD_FILE_NM,
           EXCEL_ROW_NUM,
-          <include refid="itepdField"/>
-          ,
-          /* 오류여부 테스트용 */
-          CASE WHEN MOD(ROWNUM, 2) = 1 THEN 'Y' ELSE 'N' END AS ERROR_YN 
-    FROM  IRIS_ITEPD_MAP_TEMP
+          <include refid="itepdField"/>,
+          CASE WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP IM WHERE IM.ERND_IOE_CD = IMT.ERND_IOE_CD AND IM.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IM.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD ) > 0  THEN '기등록'
+          WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP_TEMP IIMT WHERE IIMT.ERND_IOE_CD = IMT.ERND_IOE_CD AND IIMT.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD AND IIMT.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IMT.IRIS_ITEPD_GRP_CD = IIMT.IRIS_ITEPD_GRP_CD AND IIMT.UPLOAD_DE = IMT.UPLOAD_DE AND IIMT.UPLOAD_FILE_NM = IMT.UPLOAD_FILE_NM) > 1  THEN '중복'  
+          /* 비목코드 미존재 확인 추가 */
+          ELSE '' END AS ERROR_MSG,
+          CASE WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP IM WHERE IM.ERND_IOE_CD = IMT.ERND_IOE_CD AND IM.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IM.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD ) > 0  THEN 'Y'
+          WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP_TEMP IIMT WHERE IIMT.ERND_IOE_CD = IMT.ERND_IOE_CD AND IIMT.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD AND IIMT.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IMT.IRIS_ITEPD_GRP_CD = IIMT.IRIS_ITEPD_GRP_CD AND IIMT.UPLOAD_DE = IMT.UPLOAD_DE AND IIMT.UPLOAD_FILE_NM = IMT.UPLOAD_FILE_NM) > 1 THEN 'Y'     
+          /* 비목코드 미존재 확인 추가 */
+          ELSE 'N' END AS ERROR_YN
+    FROM  IRIS_ITEPD_MAP_TEMP IMT
     WHERE 1=1
     <if test="uploadDe != null and uploadDe != ''">
         AND UPLOAD_DE = #{uploadDe}
@@ -62,6 +70,8 @@
     <if test="uploadFileNm != null and uploadFileNm != ''">
         AND UPLOAD_FILE_NM = #{uploadFileNm}
     </if>  
+      ORDER BY EXCEL_ROW_NUM
+    ) A
     </select>
     
     <select id="retriveItepdExcelList" resultType="ItepdExcelDto" parameterType="ItepdExcelDto">
@@ -127,6 +137,12 @@
         <include refid="itepdParamField"></include>
       )
     </insert>
+    
+    <delete id="deleteItepdTemp" parameterType="ItepdTempDto">
+      DELETE FROM IRIS_ITEPD_MAP_TEMP
+      WHERE UPLOAD_DE = #{uploadDe}
+      AND UPLOAD_FILE_NM = #{uploadFileNm}
+    </delete>
     
     <!-- 코드정보 -->
     <select id="retriveErndIoeCdList" resultType="ItepdDto">

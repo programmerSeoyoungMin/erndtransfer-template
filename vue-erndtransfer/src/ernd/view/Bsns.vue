@@ -193,9 +193,9 @@ export default {
       const downloadUrl = 'http://localhost:8080/excel/download'
       const downloadParam = {
         'paramObj': this.bsnsSearchForm,
-        'divCd': 'BSNS'
+        'divCd': 'BSNS_GRID'
       }
-      confirm('화면에 표시된 항목만 다운로드 하시겠습니까?\n취소버튼을 누르시면 사업정보 전체 데이터가 다운로드 됩니다.') ? downloadParam.bsnsDivCd = 'BSNS_GRID' : downloadParam.bsnsDivCd = 'BSNS_ALL'
+      confirm('화면에 표시된 항목만 다운로드 하시겠습니까?\n취소버튼을 누르시면 사업정보 전체 데이터가 다운로드 됩니다.') ? downloadParam.divCd = 'BSNS_GRID' : downloadParam.divCd = 'BSNS_ALL'
       Axios.post(downloadUrl, downloadParam,
         {
           'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정합니다.

@@ -169,9 +169,7 @@ export default {
       this.search()
     },
     rowSelect(row) {
-      console.log(row)
       this.selectedRow = row
-      console.log(this.selectedRow)
     },
     excelUploadClick() {
       this.showModal = true
@@ -244,17 +242,7 @@ export default {
             uploadDe: response.data.uploadDe,
             uploadFileNm: response.data.uploadFileNm
           }
-          // Axios config setting
-          Axios.get('http://localhost:8080/itepd/retriveItepdTempList?uploadDe=' + itepdTempConfig.uploadDe + '&uploadFileNm=' + itepdTempConfig.uploadFileNm)
-            .then(response => {
-              this.excelDataList = response.data
-            })
-            .catch(error => {
-              console.log(error)
-            })
-            .finally(() => {
-              this.listLoadingModal = false
-            })
+          this.retriveItepdTempList(itepdTempConfig.uploadDe, itepdTempConfig.uploadFileNm)
         })
         .catch(error => {
           console.log(error)
@@ -284,6 +272,10 @@ export default {
     closeBtnClick() {
       this.excelDataList = []
       this.showModal = false
+    },
+    async retriveItepdTempList(uploadDe, uploadFileNm) {
+      const retriveItepdTempList = await Axios.get('http://localhost:8080/itepd/retriveItepdTempList?uploadDe=' + uploadDe + '&uploadFileNm=' + uploadFileNm)
+      this.excelDataList = retriveItepdTempList.data
     }
   }
 }

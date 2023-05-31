@@ -37,9 +37,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.anyfive.erndtransfer.domain.dto.BsnsTempDto;
 import com.anyfive.erndtransfer.domain.dto.ItepdTempDto;
+import com.anyfive.erndtransfer.domain.dto.TrnsfMasterDto;
+import com.anyfive.erndtransfer.domain.dto.TrnsfTempDto;
 import com.anyfive.erndtransfer.domain.service.BsnsService;
 import com.anyfive.erndtransfer.domain.service.ExcelService;
 import com.anyfive.erndtransfer.domain.service.ItepdService;
+import com.anyfive.erndtransfer.domain.service.TrnsfService;
 import com.anyfive.erndtransfer.domain.util.ExcelWriter;
 
 import lombok.RequiredArgsConstructor;
@@ -52,6 +55,7 @@ public class ExcelController<T> {
   private final ExcelService excelService;
   private final BsnsService bsnsService;
   private final ItepdService itepdService;
+  private final TrnsfService trnsfService;
 
   
   @PostMapping("/upload")
@@ -72,14 +76,17 @@ public class ExcelController<T> {
 
   private List<HashMap<String,String>> saveExcelFileTempTable(MultipartFile file, String category) throws Exception {
     File convFile = new File( file.getOriginalFilename() );
+    
     FileOutputStream fos = new FileOutputStream( convFile );
     fos.write( file.getBytes() );
     fos.close();
+    
     
     // 1. 엑셀 파일을 읽어서 List<HashMap<String,String>>에 담기
     FileInputStream fis = new FileInputStream(convFile);
     Workbook workbook = WorkbookFactory.create(fis);
     Sheet sheet = workbook.getSheetAt(0);
+    fis.close();
     
     // 첫 번째 행에서 키값을 읽어옴
     Row keyRow = sheet.getRow(0);
@@ -106,27 +113,52 @@ public class ExcelController<T> {
         dataList.add(dataMap);
     }
     
+    String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     if (category.equals("bsns")) {
+      // BSNS TEMP 테이블 데이터 삭제
+      BsnsTempDto delDto = new BsnsTempDto();
+      delDto.setUploadDe(today);
+      delDto.setUploadFileNm(file.getOriginalFilename());
+      bsnsService.deleteBsnsTemp(delDto);
       // BSNS TEMP 테이블에 저장
       for (var data : dataList) {
           BsnsTempDto dto = createObject(BsnsTempDto.class, data);
-          String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
           dto.setUploadDe(today);
           dto.setUploadFileNm(file.getOriginalFilename());
-          dto.setExcelRowNum(dataList.indexOf(data)+2);
+          dto.setExcelRowNum(dataList.indexOf(data)+1);
           bsnsService.registBsnsTemp(dto);
       }
     }else if (category.equals("itepd")) {
+      ItepdTempDto delDto = new ItepdTempDto();
+      delDto.setUploadDe(today);
+      delDto.setUploadFileNm(file.getOriginalFilename());
+      itepdService.deleteItepdTemp(delDto);
       // ITEPD TEMP 테이블에 저장
       for(var data : dataList) {
         ItepdTempDto dto = createObject(ItepdTempDto.class, data);
-        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         dto.setUploadDe(today);
         dto.setUploadFileNm(file.getOriginalFilename());
-        dto.setExcelRowNum(dataList.indexOf(data)+2);
+        dto.setExcelRowNum(dataList.indexOf(data)+1);
         itepdService.registItepdTemp(dto);
       }
+    }else if(category.equals("trnsfSbjt")) {
+      // TRNSF MASTER 테이블 저장
+      TrnsfMasterDto trnsfMasterDto = new TrnsfMasterDto();
+      trnsfMasterDto.setTrnsfSe("TE");
+      trnsfMasterDto.setSbjtNocs(dataList.size());
+      trnsfMasterDto.setUldFileNm(file.getOriginalFilename());
+      String trnsfId = trnsfService.registTrnsfMaster(trnsfMasterDto);
+      
+      // TRNSF TEMP 테이블에 저장
+      for(var data : dataList) {
+        TrnsfTempDto dto = createObject(TrnsfTempDto.class, data);
+        dto.setTrnsfId(trnsfId);
+        trnsfService.registTrnsfTemp(dto);
+      }
     }
+    
+    convFile.delete();
+    
     return dataList;
   }
   

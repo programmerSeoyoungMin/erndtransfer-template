@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.TrnsfMapper">
+  
+  <select id="retrivePrgrsTrnsfExistYn" parameterType="TrnsfMasterDto" resultType="String">
+    SELECT DECODE(COUNT(*),0,'N','Y') AS PRGRS_TRNSF_EXIST_YN FROM TRNSF_MASTER WHERE TRNSF_SE = #{trnsfSe} AND END_DT IS NULL
+  </select>
+  
+  <select id="retriveCurrentTrnsfId" parameterType="TrnsfMasterDto" resultType="String">
+    SELECT TRNSF_ID FROM TRNSF_MASTER WHERE TRNSF_SE = #{trnsfSe} AND END_DT IS NULL
+  </select>
+  
+  <select id="retriveLastTrnsfId" parameterType="TrnsfMasterDto" resultType="String">
+    SELECT MAX(TRNSF_ID) AS LAST_ID FROM TRNSF_MASTER tm WHERE TRNSF_SE = #{trnsfSe} AND END_DT IS NOT NULL
+  </select>
+  
+  <select id="retriveCurrentTrnsfInfo" parameterType="TrnsfMasterDto" resultType="TrnsfMasterDto">
+    SELECT
+          TRNSF_ID,
+          TRNSF_SE,
+          TRNSF_YMD,
+          DMND_DT,
+          END_DT,
+          SBJT_NOCS,
+          RGTR_ID,
+          REG_DTL_DT,
+          ULD_FILE_NM,
+          TO_CHAR(TRUNC(ROUND((NVL(END_DT, SYSDATE) - NVL(DMND_DT, SYSDATE)) * 24 * 60 * 60, 2)/ 3600), 'FM9900') || 'h ' ||
+          TO_CHAR(TRUNC(MOD(ROUND((NVL(END_DT, SYSDATE) - NVL(DMND_DT, SYSDATE)) * 24 * 60 * 60, 2), 3600)/ 60), 'FM00') || 'm ' ||
+          TO_CHAR(MOD(ROUND((NVL(END_DT, SYSDATE) - NVL(DMND_DT, SYSDATE)) * 24 * 60 * 60, 2), 60), 'FM00') || 's' AS REQ_TM
+    FROM
+          TRNSF_MASTER
+    WHERE TRNSF_ID = #{trnsfId}
+  </select>
+  
+  <select id="retrivePrgrsPrcdInfo" parameterType="TrnsfMasterDto" resultType="TrnsfPrcdDto">
+    SELECT 
+          TO_CHAR(TRUNC(TRNSF_PRGRS_SEC/3600),'FM9900') || 'h ' ||
+          TO_CHAR(TRUNC(MOD(TRNSF_PRGRS_SEC,3600)/60),'FM00') || 'm ' ||
+          TO_CHAR(MOD(TRNSF_PRGRS_SEC,60),'FM00') || 's' AS TRNSF_PRGRS_TM,
+          ROUND((SELECT COUNT(*) FROM TRNSF_PRCD_FLFMT_RSLT T WHERE T.TRNSF_ID = A.TRNSF_ID AND T.END_DT IS NOT NULL) / (SELECT COUNT(*) FROM PRCD_INFO),2) * 100 AS TRNSF_PRGRS_RT,
+          CASE WHEN TO_CHAR(TRUNC(REQ_SEC/3600),'FM9900') = 00 THEN '' ELSE TO_CHAR(TRUNC(REQ_SEC/3600),'FM9900') || 'h ' END ||
+          TO_CHAR(TRUNC(MOD(REQ_SEC,3600)/60),'FM00') || 'm ' ||
+          TO_CHAR(MOD(REQ_SEC,60),'FM00') || 's' AS REQ_TM,
+          PRCD_ID,
+          (SELECT PRCD_NM FROM PRCD_INFO T WHERE T.PRCD_ID = A.PRCD_ID) AS PRCD_NM,
+          NVL(ERR_NOCS,0) AS ERR_OCRN_NOCS,
+          TRNSF_DATA_NOCS AS TRNSF_DATA_NOCS,
+          (SELECT ULD_FILE_NM FROM TRNSF_MASTER T WHERE T.TRNSF_ID = A.TRNSF_ID) AS ULD_FILE_NM
+    FROM (
+            SELECT TRNSF_ID, PRCD_ID, "NO", SCS_NOCS, ERR_NOCS, ETC_NOCS, TRNSF_DATA_NOCS, BRNG_DT, END_DT, RGTR_ID, REG_DTL_DT
+                  , ROW_NUMBER() OVER(PARTITION BY TRNSF_ID ORDER BY "NO" DESC) AS RN
+                  , ROUND((SYSDATE - BRNG_DT) * 24 * 60 * 60, 2) AS REQ_SEC
+                  , (SELECT ROUND((SYSDATE - TM.DMND_DT) * 24 * 60 * 60, 2) FROM TRNSF_MASTER TM WHERE TM.TRNSF_ID = TPFR.TRNSF_ID) AS TRNSF_PRGRS_SEC 
+            FROM   TRNSF_PRCD_FLFMT_RSLT TPFR
+            WHERE TRNSF_ID = #{trnsfId}
+            AND   BRNG_DT IS NOT NULL AND END_DT IS NULL
+          ) A
+    WHERE RN = 1
+  </select>
+  
+  <select id="retrivePrgrsPrcdList" parameterType="TrnsfMasterDto" resultType="TrnsfPrcdDto">
+    SELECT
+          TRNSF_ID,
+          PRCD_ID,
+          (SELECT PRCD_NM FROM PRCD_INFO T WHERE T.PRCD_ID = TPFR.PRCD_ID) AS PRCD_NM,
+          NO,
+          CASE WHEN BRNG_DT IS NULL THEN '대기'
+               WHEN END_DT IS NULL THEN '진행중'
+              ELSE '완료'
+          END AS PRCD_PRGRS_STTUS,
+          NVL(SCS_NOCS,0) + NVL(ERR_NOCS,0) + NVL(ETC_NOCS,0) AS ALL_NOCS,
+          NVL(SCS_NOCS,0) AS SCS_NOCS,
+          NVL(ERR_NOCS,0) AS ERR_NOCS,
+          NVL(ETC_NOCS,0) AS ETC_NOCS,
+          NVL(TRNSF_DATA_NOCS,0) AS TRNSF_DATA_NOCS,
+          RGTR_ID,
+          REG_DTL_DT,
+          CASE WHEN BRNG_DT IS NULL THEN '' 
+          ELSE 
+          CASE WHEN TO_CHAR(TRUNC(ROUND((NVL(END_DT,SYSDATE) - BRNG_DT) * 24 * 60 * 60, 2)/3600),'FM9900') = 00 THEN '' ELSE TO_CHAR(TRUNC(ROUND((NVL(END_DT,SYSDATE) - BRNG_DT) * 24 * 60 * 60, 2)/3600),'FM9900') || 'h ' END ||
+          TO_CHAR(TRUNC(MOD(ROUND((NVL(END_DT,SYSDATE) - BRNG_DT) * 24 * 60 * 60, 2),3600)/60),'FM00') || 'm ' ||
+          TO_CHAR(MOD(ROUND((NVL(END_DT,SYSDATE) - BRNG_DT) * 24 * 60 * 60, 2),60),'FM00') || 's' END AS REQ_TM
+        FROM
+          TRNSF_PRCD_FLFMT_RSLT TPFR
+        WHERE TRNSF_ID = #{trnsfId}
+        ORDER BY NO
+  </select>
+  
+  <insert id="registTrnsfMaster" parameterType="TrnsfMasterDto" >
+    <selectKey keyProperty="trnsfId" resultType="String" order="BEFORE">
+      SELECT #{trnsfSe} ||'_'|| TO_CHAR(COUNT(TRNSF_ID)+1,'FM9900000') AS TRNSF_ID FROM TRNSF_MASTER WHERE TRNSF_SE = #{trnsfSe}
+    </selectKey>
+    INSERT INTO TRNSF_MASTER
+    (TRNSF_ID, TRNSF_SE, TRNSF_YMD, DMND_DT, END_DT, SBJT_NOCS, RGTR_ID, REG_DTL_DT, ULD_FILE_NM)
+    VALUES(#{trnsfId}, #{trnsfSe}, SYSDATE, NULL, NULL, #{sbjtNocs}, 'SYSTEM', SYSDATE, #{uldFileNm})
+  </insert>
+  
+  <insert id="registTrnsfTemp" parameterType="TrnsfTempDto">
+    INSERT INTO TRNSF_TEMP
+    (TRNSF_ID, SBJT_NO, NO, RGTR_ID, REG_DTL_DT)
+    VALUES(#{trnsfId}, #{sbjtNo}, #{no}, 'SYSTEM', SYSDATE)
+  </insert>
+  
+  <update id="updateTrnsfMaster" parameterType="TrnsfMasterDto">
+    UPDATE TRNSF_MASTER
+    SET DMND_DT = SYSDATE
+    WHERE TRNSF_ID = #{trnsfId}
+  </update>
+  
+  <insert id="registTrnsfPrcdFlfmtRslt" parameterType="TrnsfMasterDto">
+    INSERT INTO	TRNSF_PRCD_FLFMT_RSLT
+    (TRNSF_ID, PRCD_ID, NO, SCS_NOCS, ERR_NOCS, ETC_NOCS, BRNG_DT, END_DT, RGTR_ID, REG_DTL_DT, TRNSF_DATA_NOCS)
+    SELECT
+      #{trnsfId},
+      PRCD_ID,
+      PRCD_ORD AS NO,
+      0 AS SCS_NOCS,
+      0 AS ERR_NOCS,
+      0 AS ETC_NOCS,
+      NULL AS BRNG_DT,
+      NULL AS END_DT,
+      'SYSTEM' AS RGTR_ID,
+      SYSDATE AS REG_DTL_DT,
+      0 AS TRNSF_DATA_NOCS
+    FROM PRCD_INFO
+    ORDER BY PRCD_ORD
+  </insert>
+  
+  <update id="callIrisPrcd" statementType="CALLABLE" parameterType="TrnsfMasterDto">
+    { call IRIS_TRANSFER(#{trnsfId, mode=IN, jdbcType=VARCHAR, javaType=string}) }
+    <!-- 주의사항 : { 와 call 사이에는 space 만 허용, tab 입력 시, 오류발생-->
+  </update>
+  
+  
+  <delete id="deleteTrnsfTemp" parameterType="TrnsfMasterDto">
+    DELETE FROM TRNSF_TEMP WHERE TRNSF_ID = #{trnsfId}
+  </delete>
+  
+  <delete id="deleteTrnsfMaster" parameterType="TrnsfMasterDto">
+    DELETE FROM TRNSF_MASTER WHERE TRNSF_ID = #{trnsfId}
+  </delete>
+  
+</mapper>
