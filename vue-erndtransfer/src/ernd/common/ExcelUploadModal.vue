@@ -97,12 +97,12 @@ export default {
   },
   methods: {
     closeBtnClick() {
+      this.closeFlag = true
       this.$emit('close')
     },
     handleFiles(files) {
       if (files.length > 0) {
         this.fileName = files[0].name
-        console.log(files[0])
       }
     },
     openFileSelect() {
@@ -112,7 +112,6 @@ export default {
       const files = event.target.files
       if (files.length > 0) {
         this.fileName = files[0].name
-        console.log(files[0])
       }
     },
     handleDrop(event) {

@@ -60,4 +60,8 @@ public class ItepdService {
     return itepdMapper.retriveIrisItepdCdList();
   }
 
+  public void deleteItepdTemp(ItepdTempDto delDto) {
+    itepdMapper.deleteItepdTemp(delDto);
+  }
+
 }

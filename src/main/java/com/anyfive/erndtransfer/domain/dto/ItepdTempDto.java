@@ -11,12 +11,16 @@ import lombok.Setter;
 @Alias("ItepdTempDto")
 @RequiredArgsConstructor
 public class ItepdTempDto {
-  /* upload 날짜 */
+  /*엑셀 저장 데이터 정보*/
   private String uploadDe;
-  /* upload 파일명 */
   private String uploadFileNm;
-  /* excel 순번 */
   private int excelRowNum;
+  /*오류메세지*/
+  private String errorMsg;
+  /*오류여부*/
+  private String errorYn;
+  /*번호*/
+  private String no;
   /*ERND 비목코드*/
   private String erndIoeCd;
   /*ERND 비목명*/

@@ -127,24 +127,35 @@
   
     
   <select id="retriveBsnsTempList" resultType="BsnsTempDto" parameterType="BsnsTempDto">      
-    SELECT
-          ROWNUM as NO,
-          '' AS ERROR_MSG,
-          UPLOAD_DE,
-          UPLOAD_FILE_NM,
-          EXCEL_ROW_NUM,
-          <include refid="bsnsField"/>
-          ,
-          /* 오류여부 테스트용 */
-          CASE WHEN MOD(ROWNUM, 2) = 1 THEN 'Y' ELSE 'N' END AS ERROR_YN 
-    FROM  IRIS_BSNS_CD_MAP_TEMP
-    WHERE 1=1
-    <if test="uploadDe != null and uploadDe != ''">
-        AND UPLOAD_DE = #{uploadDe}
-    </if>
-    <if test="uploadFileNm != null and uploadFileNm != ''">
-        AND UPLOAD_FILE_NM = #{uploadFileNm}
-    </if>  
+    SELECT 
+          ROWNUM AS NO, 
+          A.*
+    FROM 
+    (          
+      SELECT
+            UPLOAD_DE,
+            UPLOAD_FILE_NM,
+            EXCEL_ROW_NUM,
+            <include refid="bsnsField"/>
+            ,
+            CASE WHEN (SELECT COUNT(*) FROM IRIS_BSNS_CD_MAP BM WHERE BM.ERND_BSNS_CD = BMT.ERND_BSNS_CD AND BM.SELE_YY = BMT.SELE_YY AND BM.IRIS_BSNS_CD = BMT.IRIS_BSNS_CD) &gt; 0  THEN '기등록' 
+            WHEN (SELECT COUNT(*) FROM IRIS_BSNS_CD_MAP_TEMP IBMT WHERE IBMT.ERND_BSNS_CD = BMT.ERND_BSNS_CD AND IBMT.SELE_YY = BMT.SELE_YY AND IBMT.SELE_YY_BSNS_CD = BMT.SELE_YY_BSNS_CD AND IBMT.IRIS_BSNS_CD = BMT.IRIS_BSNS_CD AND IBMT.UPLOAD_DE = BMT.UPLOAD_DE AND IBMT.UPLOAD_FILE_NM = BMT.UPLOAD_FILE_NM) &gt; 1 THEN '중복데이터 업로드'
+            WHEN (SELECT COUNT(*) FROM ERND_BIZ_CD EBC WHERE EBC.BIZ_CD = BMT.ERND_BSNS_CD AND EBC.BIZ_REQST_YR = BMT.SELE_YY) = 0 THEN '사업코드 미존재'
+            ELSE '' END AS ERROR_MSG,
+            CASE WHEN (SELECT COUNT(*) FROM IRIS_BSNS_CD_MAP BM WHERE BM.ERND_BSNS_CD = BMT.ERND_BSNS_CD AND BM.SELE_YY = BMT.SELE_YY AND BM.IRIS_BSNS_CD = BMT.IRIS_BSNS_CD)	&gt; 0  THEN 'Y' 
+            WHEN (SELECT COUNT(*) FROM IRIS_BSNS_CD_MAP_TEMP IBMT WHERE IBMT.ERND_BSNS_CD = BMT.ERND_BSNS_CD AND IBMT.SELE_YY = BMT.SELE_YY AND IBMT.SELE_YY_BSNS_CD = BMT.SELE_YY_BSNS_CD AND IBMT.IRIS_BSNS_CD = BMT.IRIS_BSNS_CD AND IBMT.UPLOAD_DE = BMT.UPLOAD_DE AND IBMT.UPLOAD_FILE_NM = BMT.UPLOAD_FILE_NM) &gt; 1 THEN 'Y'
+            WHEN (SELECT COUNT(*) FROM ERND_BIZ_CD EBC WHERE EBC.BIZ_CD = BMT.ERND_BSNS_CD AND EBC.BIZ_REQST_YR = BMT.SELE_YY) = 0 THEN 'Y'
+            ELSE 'N' END AS ERROR_YN
+      FROM  IRIS_BSNS_CD_MAP_TEMP BMT
+      WHERE 1=1
+      <if test="uploadDe != null and uploadDe != ''">
+          AND UPLOAD_DE = #{uploadDe}
+      </if>
+      <if test="uploadFileNm != null and uploadFileNm != ''">
+          AND UPLOAD_FILE_NM = #{uploadFileNm}
+      </if>  
+      ORDER BY EXCEL_ROW_NUM
+    ) A
     </select>
     
     <select id="retriveBsnsExcelList" resultType="BsnsExcelDto" parameterType="BsnsExcelDto">
@@ -292,4 +303,11 @@
         <include refid="bsnsParamField"></include>
       )
     </insert>
+    
+    <delete id="deleteBsnsTemp" parameterType="BsnsTempDto">
+      DELETE FROM IRIS_BSNS_CD_MAP_TEMP
+      WHERE UPLOAD_DE = #{uploadDe}
+      AND UPLOAD_FILE_NM = #{uploadFileNm}
+    </delete>
+    
 </mapper>

@@ -247,11 +247,12 @@ export default {
   },
   mounted() {
     // when mounted end then
-    this.setGridHeight()
+
   },
   updated() {
+    this.setGridHeight()
     if (this.vscroll) {
-      document.querySelector('.vscroll-container').style.height = this.vscrollHeight + 'px'
+      document.querySelector('.vscroll-container').style.height = Number(this.vscrollHeight) + 'px'
     }
   },
   methods: {
@@ -309,10 +310,13 @@ export default {
       } else {
         const table = document.querySelector('.el-table-virtual-scroll>.el-table>.el-table__body-wrapper.is-scrolling-left')
         const header = document.querySelector('.el-table-virtual-scroll .el-table .el-table__header-wrapper')
+        const headerHeight = header.getClientRects()[0].height
         if (table) {
-          table.style.height = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
-          table.style.minHeight = Number(parseInt(this.gridHeight) - parseInt(header.clientHeight)) + 'px'
+          table.style.height = Number(parseInt(this.gridHeight) - parseInt(headerHeight)) + 'px'
+          table.style.minHeight = Number(parseInt(this.gridHeight) - parseInt(headerHeight)) + 'px'
         }
+        // modal grid 스크롤 오류 수정
+        document.querySelector('.el-table__body-wrapper').childNodes[0].childNodes[0].style.transform = null
       }
     }
   }

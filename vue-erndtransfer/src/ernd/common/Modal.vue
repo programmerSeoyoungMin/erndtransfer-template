@@ -60,10 +60,15 @@ export default {
       if (this.closeFlag) {
         this.$emit('close')
       } else {
-        this.$alert('저장 후 닫기를 해주세요.', '알림', {
+        this.$confirm('저장되지 않은 데이터가 존재합니다.\n저장하시겠습니까?', '알림', {
+          cancelButtonText: '닫기',
           confirmButtonText: '확인',
           callback: action => {
-            return false
+            if (action === 'confirm') {
+              this.$emit('onSaveBtnClick')
+            } else {
+              this.$emit('close')
+            }
           }
         })
       }
