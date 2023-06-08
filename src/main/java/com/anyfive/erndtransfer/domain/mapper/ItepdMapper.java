@@ -25,4 +25,6 @@ public interface ItepdMapper {
 
     void deleteItepdTemp(ItepdTempDto delDto);
 
+    int retriveItepdListCnt(ItepdDto itepdDto);
+
 }

@@ -1,9 +1,5 @@
 <template>
   <div class="app-container">
-    <!-- parent name : 대메뉴명 -->
-    <!-- child name(required) : 소메뉴명 -->
-    <!-- parent link : 대메뉴링크 -->
-    <!-- child link : 소메뉴링크 -->
     <page-info :parent-name="'데이터 정제'" :child-name="'비목'" :parent-link="'/ernd/itepd'" :child-link="'/ernd/itepd'" />
 
     <!-- 검색 영역, 박스 및 검색 버튼 자동 적용. 검색 버튼 작동 함수는 @onSearch에 적용 -->
@@ -50,6 +46,9 @@
       :task-se-tbl-nm="'IRIS_ITEPD_MAP_TEMP'"
       :excel-data-list="excelDataList"
       :list-loading="listLoadingModal"
+      :upload-result="uploadResult"
+      :save-result="saveResult"
+      @onClearList="clearList"
       @onUploadBtnClick="uploadBtnClick"
       @onDownloadBtnClick="downloadBtnClick"
       @onSaveBtnClick="saveBtnClick"
@@ -75,8 +74,6 @@
       >
         <template v-slot:rows />
       </grid>
-    <!-- selected row 확인용 -->
-    <!--selected row : {{ selectedRow }}-->
     </div>
     <pagination v-show="dataList.length > 0" :pager="pager" @onhandleCurrentChange="handleCurrentChange" />
   </div>
@@ -93,21 +90,26 @@ import ExcelUploadModal from '@/ernd/common/ExcelUploadModal'
 import Axios from 'axios'
 
 export default {
-  name: 'Demo',
+  name: 'Itepd',
   components: { PageInfo, SearchTable, Grid, Pagination, ExcelUploadModal },
   data() {
     return {
+      // 페이저
       pager: {
         currentPage: 1,
         limit: 10,
         total: 1
       },
+      // grid data loding flag
       listLoading: false,
+      // grid header & data
       headers: [],
       dataList: [],
       selectedRow: null,
+      // search form option data
       erndIoeCdOptions: [],
       irisItepdCdOptions: [],
+      // 비목 검색 조건
       itepdSearchForm: {
         erndIoeCd: '',
         erndIoeNm: '',
@@ -117,7 +119,9 @@ export default {
       // modal data
       showModal: false,
       listLoadingModal: false,
-      excelDataList: []
+      excelDataList: [],
+      uploadResult: '',
+      saveResult: ''
     }
   },
   created() {
@@ -127,6 +131,7 @@ export default {
     this.search()
   },
   methods: {
+    // 검색조건 option data 조회
     async getCode() {
       const erndCdResponse = await Axios.get('http://localhost:8080/itepd/retriveErndIoeCdList')
       this.erndIoeCdOptions = erndCdResponse.data
@@ -182,7 +187,7 @@ export default {
       }
       Axios.post(downloadUrl, downloadParam,
         {
-          'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정합니다.
+          'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정
         }).then(response => {
         const downloadInfo = {
           blob: new Blob([response.data], { type: 'application/octet-stream' }),
@@ -218,14 +223,8 @@ export default {
         link.click()
       })
     },
-    uploadBtnClick(file) {
-      if (file === undefined) {
-        alert('업로드할 엑셀 파일을 선택해주세요.')
-        return
-      }
+    async uploadBtnClick(file) {
       this.listLoadingModal = true
-      // upload excel file with axios
-      const result = true
       // file
       // excelUploadModal.vue의 file 가져오기
       const formData = new FormData()
@@ -236,51 +235,58 @@ export default {
           'Content-Type': 'multipart/form-data' // 헤더 설정
         }
       }
-      Axios.post('http://localhost:8080/excel/upload', formData, config)
-        .then(response => {
-          const itepdTempConfig = {
-            uploadDe: response.data.uploadDe,
-            uploadFileNm: response.data.uploadFileNm
-          }
-          this.retriveItepdTempList(itepdTempConfig.uploadDe, itepdTempConfig.uploadFileNm)
-        })
-        .catch(error => {
-          console.log(error)
-          return result
-        })
-        .finally(() => {
-          this.listLoadingModal = false
-        })
+      const uploadRes = await Axios.post('http://localhost:8080/excel/upload', formData, config)
+
+      if (uploadRes.data.result === 'success') {
+        const itepdTempConfig = {
+          uploadDe: uploadRes.data.uploadDe,
+          uploadFileNm: uploadRes.data.uploadFileNm
+        }
+        this.retriveItepdTempList(itepdTempConfig.uploadDe, itepdTempConfig.uploadFileNm)
+      } else {
+        this.excelDataList = []
+        this.listLoadingModal = false
+      }
+      // ExcelUploadModal > uploadResult의 Watcher에서 업로드 결과에 따라 Alert를 표시하도록 함.
+      this.uploadResult = uploadRes.data.result
+      this.listLoadingModal = false
     },
     saveBtnClick() {
-      const result = true
+      this.saveResult = 'success'
       this.listLoadingModal = true
       Axios.post('http://localhost:8080/itepd/saveItepdList', this.excelDataList)
         .then(response => {
-
+          console.log(response)
         })
         .catch(error => {
           console.log(error)
+          this.saveResult = 'error'
         })
         .finally(() => {
           this.listLoadingModal = false
-        }
-        )
-      return result
+        })
     },
     // modal close시, excelDataList 초기화
     closeBtnClick() {
       this.excelDataList = []
       this.showModal = false
+      this.uploadResult = ''
+      this.saveResult = ''
+      this.search()
     },
     async retriveItepdTempList(uploadDe, uploadFileNm) {
       const retriveItepdTempList = await Axios.get('http://localhost:8080/itepd/retriveItepdTempList?uploadDe=' + uploadDe + '&uploadFileNm=' + uploadFileNm)
       this.excelDataList = retriveItepdTempList.data
+    },
+    // modal에서 파일 삭제시, clear
+    clearList() {
+      this.excelDataList = []
+      this.uploadResult = ''
+      this.saveResult = ''
     }
-  }
+  }// methods
 }
 </script>
 
 <style scoped>
-
 </style>

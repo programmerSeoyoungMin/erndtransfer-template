@@ -38,16 +38,19 @@ public class TrnsfController {
     return trnsfService.retriveLastTrnsfId(trnsfMasterDto);
   }
   
+  //현재 이관 정보 조회
   @PostMapping("/retriveCurrentTrnsfInfo")
   public TrnsfMasterDto retriveCurrentTrnsfInfo(@RequestBody TrnsfMasterDto trnsfMasterDto) {
     return trnsfService.retriveCurrentTrnsfInfo(trnsfMasterDto);
   }
     
+  //진행 중 이관 프로시저 정보 조회
   @PostMapping("/retrivePrgrsPrcdInfo")
   public TrnsfPrcdDto retrivePrgrsPrcdInfo(@RequestBody TrnsfMasterDto trnsfMasterDto) {
     return trnsfService.retrivePrgrsPrcdInfo(trnsfMasterDto);
   }
   
+  //진행 중 프로시저 목록 조회
   @PostMapping("/retrivePrgrsPrcdList")
   public List<TrnsfPrcdDto> retrivePrgrsPrcdList(@RequestBody TrnsfMasterDto trnsfMasterDto) {
     return trnsfService.retrivePrgrsPrcdList(trnsfMasterDto);
@@ -71,10 +74,11 @@ public class TrnsfController {
     
     //저장프로시저 call
     trnsfService.callIrisPrcd(trnsfMasterDto);
-    
+    // 시작된 이관 아이디 리턴
     return trnsfMasterDto.getTrnsfId();
   }
   
+  // 이관 업로드 파일 삭제 
   @PostMapping("/deleteTrnsfUploadFile")
   public void deleteTrnsfMaster(@RequestBody TrnsfMasterDto trnsfMasterDto) {
     trnsfService.deleteTrnsfUploadFile(trnsfMasterDto);

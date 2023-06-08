@@ -1,9 +1,5 @@
 <template>
   <div class="app-container">
-    <!-- parent name : 대메뉴명 -->
-    <!-- child name(required) : 소메뉴명 -->
-    <!-- parent link : 대메뉴링크 -->
-    <!-- child link : 소메뉴링크 -->
     <page-info :parent-name="'데이터 정제'" :child-name="'사업'" :parent-link="'/ernd/bsns'" :child-link="'/ernd/bsns'" />
 
     <!-- 검색 영역, 박스 및 검색 버튼 자동 적용. 검색 버튼 작동 함수는 @onSearch에 적용 -->
@@ -25,7 +21,7 @@
 
           <el-col :span="9">
             <el-form-item label-width="130px" label="e-R&D 사업년도">
-              <el-date-picker v-model="bsnsSearchForm.seleYy" type="year" format="yyyy" placeholder="선택" />
+              <el-date-picker v-model="bsnsSearchForm.seleYy" clearable type="year" format="yyyy" placeholder="선택" />
             </el-form-item>
           </el-col>
 
@@ -46,6 +42,9 @@
       :task-se-tbl-nm="'IRIS_BSNS_CD_MAP_TEMP'"
       :excel-data-list="excelDataList"
       :list-loading="listLoadingModal"
+      :upload-result="uploadResult"
+      :save-result="saveResult"
+      @onClearList="clearList"
       @onUploadBtnClick="uploadBtnClick"
       @onDownloadBtnClick="downloadBtnClick"
       @onSaveBtnClick="saveBtnClick"
@@ -71,8 +70,6 @@
       >
         <template v-slot:rows />
       </grid>
-    <!-- selected row 확인용 -->
-    <!--selected row : {{ selectedRow }}-->
     </div>
     <pagination v-show="dataList.length > 0" :pager="pager" @onhandleCurrentChange="handleCurrentChange" />
   </div>
@@ -89,19 +86,23 @@ import ExcelUploadModal from '@/ernd/common/ExcelUploadModal'
 import Axios from 'axios'
 
 export default {
-  name: 'Demo',
+  name: 'Bsns',
   components: { PageInfo, SearchTable, Grid, Pagination, ExcelUploadModal },
   data() {
     return {
+      // 페이저
       pager: {
         currentPage: 1,
         limit: 10,
         total: 1
       },
+      // grid data loding flag
       listLoading: false,
+      // grid header & data
       headers: [],
       dataList: [],
       selectedRow: null,
+      // 사업 검색조건 form
       bsnsSearchForm: {
         erndBsnsCd: '',
         irisBsnsCd: '',
@@ -111,10 +112,18 @@ export default {
       // modal data
       showModal: false,
       listLoadingModal: false,
-      excelDataList: []
+      excelDataList: [],
+      uploadResult: '',
+      saveResult: '',
+      // 업로드 파일 정보
+      bsnsTempConfig: {
+        uploadDe: '',
+        uploadFileNm: ''
+      }
     }
   },
   watch: {
+    // mapping 여부에 따른 iris 사업코드 입력 가능 여부 controll
     'bsnsSearchForm.mappingYn': function(val) {
       const irisBsnsCd = this.$refs['irisBsnsCd'].$el.querySelector('input')
       if (val === 'N') {
@@ -138,10 +147,15 @@ export default {
 
       const searchParams = this.bsnsSearchForm
       // pagingInfo 검색조건 설정
-      searchParams.seleYy = new Date(this.bsnsSearchForm.seleYy).getFullYear() + ''
+      if (searchParams.seleYy !== null && searchParams.seleYy !== '') {
+        searchParams.seleYy = new Date(this.bsnsSearchForm.seleYy).getFullYear() + ''
+      } else {
+        searchParams.seleYy = ''
+      }
       searchParams.currentPage = this.pager.currentPage
       searchParams.limit = this.pager.limit
 
+      // mapping 여부에 따른 header 설정
       if (searchParams.mappingYn === 'N') {
         const headerDto = {
           taskSeTblNm: 'IRIS_BSNS_CD_MAP_N'
@@ -165,7 +179,7 @@ export default {
             console.log(error)
           })
       }
-
+      // 사업 목록 조회
       Axios.post('http://localhost:8080/bsns/retriveBsnsList', searchParams)
         .then(response => {
           this.dataList = response.data.bsnsList
@@ -183,22 +197,50 @@ export default {
       this.search()
     },
     rowSelect(row) {
-      console.log(row)
       this.selectedRow = row
     },
     excelUploadClick() {
       this.showModal = true
     },
-    excelDownloadClick() {
+    async excelDownloadClick() {
       const downloadUrl = 'http://localhost:8080/excel/download'
       const downloadParam = {
         'paramObj': this.bsnsSearchForm,
         'divCd': 'BSNS_GRID'
       }
-      confirm('화면에 표시된 항목만 다운로드 하시겠습니까?\n취소버튼을 누르시면 사업정보 전체 데이터가 다운로드 됩니다.') ? downloadParam.divCd = 'BSNS_GRID' : downloadParam.divCd = 'BSNS_ALL'
+      // 엑셀 다운로드시, 서식 확인
+      const h = this.$createElement
+      const confirm = await this.$confirm('', '', {
+        confirmButtonText: '확인',
+        cancelButtonText: '취소',
+        customClass: 'confirm-model',
+        message: h('div', null, [
+          h('i', { class: 'el-icon-check', style: 'color:#f90;font-size:30px;' }),
+          h('span', { style: 'margin-left:10px;font-size:16px;line-height:30px;font-weight:600;vertical-align:top;' }, '확인'),
+          h('p', { style: 'margin:10px 0 0 40px;' }, '화면에 표시된 항목만 다운로드 하시겠습니까?'),
+          h('p', { style: 'margin:10px 0 0 40px;' }, '취소버튼을 누르시면 사업정보 전체 데이터가 다운로드 됩니다.')
+        ])
+      }).catch((action) => {
+        console.log(action)
+      })
+
+      if (confirm) {
+        downloadParam.divCd = 'BSNS_GRID'
+        this.$message({
+          type: 'info',
+          message: '화면에 표시된 항목이 다운로드됩니다.'
+        })
+      } else {
+        downloadParam.divCd = 'BSNS_ALL'
+        this.$message({
+          type: 'info',
+          message: '전체 항목이 다운로드됩니다.'
+        })
+      }
+
       Axios.post(downloadUrl, downloadParam,
         {
-          'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정합니다.
+          'responseType': 'arraybuffer' // 응답 데이터를 byte 배열로 받기 위해 responseType을 설정
         }).then(response => {
         const downloadInfo = {
           blob: new Blob([response.data], { type: 'application/octet-stream' }),
@@ -234,16 +276,9 @@ export default {
         link.click()
       })
     },
-    uploadBtnClick(file) {
-      if (file === undefined) {
-        alert('업로드할 엑셀 파일을 선택해주세요.')
-        return
-      }
+    async uploadBtnClick(file) {
       this.listLoadingModal = true
-      // upload excel file with axios
-      const result = true
-      // file
-      // excelUploadModal.vue의 file 가져오기
+      // 파일 업로드 fromData 생성
       const formData = new FormData()
       formData.append('file', file) // 파일 데이터 추가
       formData.append('category', 'bsns')
@@ -252,49 +287,65 @@ export default {
           'Content-Type': 'multipart/form-data' // 헤더 설정
         }
       }
-      Axios.post('http://localhost:8080/excel/upload', formData, config)
-        .then(response => {
-          const bsnsTempConfig = {
-            uploadDe: response.data.uploadDe,
-            uploadFileNm: response.data.uploadFileNm
-          }
-          this.retriveBsnsTempList(bsnsTempConfig.uploadDe, bsnsTempConfig.uploadFileNm)
-        })
-        .catch(error => {
-          console.log(error)
-          return result
-        }).finally(() => {
-          this.listLoadingModal = false
-        })
+      // 파일 업로드
+      const uploadRes = await Axios.post('http://localhost:8080/excel/upload', formData, config)
+      // 성공시 업로드된 파일명을 저장하고, 업로드된 파일의 데이터를 조회
+      if (uploadRes.data.result === 'success') {
+        this.bsnsTempConfig.uploadDe = uploadRes.data.uploadDe
+        this.bsnsTempConfig.uploadFileNm = uploadRes.data.uploadFileNm
+        this.retriveBsnsTempList()
+      } else {
+        this.excelDataList = []
+        this.listLoadingModal = false
+      }
+      // ExcelUploadModal > uploadResult의 Watcher에서 업로드 결과에 따라 Alert를 표시하도록 함.
+      this.uploadResult = uploadRes.data.result
+      this.listLoadingModal = false
     },
-    saveBtnClick() {
-      const result = true
+    async saveBtnClick() {
+      this.saveResult = 'success'
       this.listLoadingModal = true
-      Axios.post('http://localhost:8080/bsns/saveBsnsList', this.excelDataList)
+      await Axios.post('http://localhost:8080/bsns/saveBsnsList', this.excelDataList)
         .then(response => {
-
+          console.log(response)
         })
         .catch(error => {
           console.log(error)
+          this.saveResult = 'error'
         })
         .finally(() => {
           this.listLoadingModal = false
         })
-      return result
     },
-    // modal close시, excelDataList 초기화
+    // modal close시, excelDataList, uploadResult, saveResult 초기화
     closeBtnClick() {
       this.excelDataList = []
+      this.uploadResult = ''
+      this.saveResult = ''
       this.showModal = false
+      this.search()
     },
-    async retriveBsnsTempList(uploadDe, uploadFileNm) {
-      const retriveBsnsTempList = await Axios.get('http://localhost:8080/bsns/retriveBsnsTempList?uploadDe=' + uploadDe + '&uploadFileNm=' + uploadFileNm)
+    async retriveBsnsTempList() {
+      const retriveBsnsTempList = await Axios.get('http://localhost:8080/bsns/retriveBsnsTempList?uploadDe=' + this.bsnsTempConfig.uploadDe + '&uploadFileNm=' + this.bsnsTempConfig.uploadFileNm)
       this.excelDataList = retriveBsnsTempList.data
+    },
+    // modal에서 파일 삭제시, clear
+    clearList() {
+      this.excelDataList = []
+      this.uploadResult = ''
+      this.saveResult = ''
     }
-  }
+  }// methods
 }
 </script>
 
 <style scoped>
-
+.confirm-model .el-message-box__btns .el-button:nth-child(1) {
+  float:right;
+}
+.confirm-model .el-message-box__btns .el-button:nth-child(2) {
+  margin-right:10px;
+  background-color:#2d8cf0;
+  border-color:#2d8cf0;
+}
 </style>

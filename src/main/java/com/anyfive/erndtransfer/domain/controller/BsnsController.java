@@ -48,4 +48,5 @@ public class BsnsController {
       List<BsnsTempDto> bsnsList = bsnsService.retriveBsnsTempList(bsnsTempDto);
       return bsnsList;
   }
+  
 }

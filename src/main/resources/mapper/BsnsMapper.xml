@@ -124,7 +124,86 @@
       </if>
   </select>
   
-  
+  <select id="retriveBsnsListCnt" resultType="Integer" parameterType="BsnsDto">      
+    SELECT COUNT(*) FROM 
+    (
+    SELECT  ROWNUM AS NO,
+            SEQ,
+            <include refid="bsnsField"/>
+      FROM
+      ( 
+        <if test="mappingYn != null">
+            SELECT 
+                SEQ,
+                <include refid="bsnsField"/>
+            FROM IRIS_BSNS_CD_MAP
+            WHERE 'Y' = #{mappingYn}
+            UNION ALL
+            SELECT * FROM
+            (SELECT 
+                    9999 AS SEQ,
+                    BIZ_REQST_YR AS SELE_YY,
+                    BIZ_CD AS ERND_BSNS_CD,
+                    '' AS SELE_YY_BSNS_CD,
+                    BIZ_NM AS ERND_BSNS_NAME_1,
+                    '' AS ERND_BSNS_NAME_2,
+                    '' AS ERND_BSNS_NAME_3,
+                    '' AS ERND_BSNS_NAME_4,
+                    '' AS DBRAIN_CD,
+                    '' AS MOEF_DBRAIN_CD,
+                    '' AS ERND_DBRAIN_CD,
+                    '' AS BSNS_YY,
+                    '' AS JRSD_CD,
+                    '' AS JRSD_NAME,
+                    '' AS ACTG_CD,
+                    '' AS ACTG_NAME,
+                    '' AS FILD_NAME,
+                    '' AS FILD_CD,
+                    '' AS SECTOR_NAME,
+                    '' AS SECTOR_CD,
+                    '' AS PROGRAM_ID,
+                    '' AS PROGRAM_NAME,
+                    '' AS PROGRAM_CODE,
+                    '' AS UNIT_ID,
+                    '' AS UNIT_NAME,
+                    '' AS UNIT_CD,
+                    '' AS PTC_ID,
+                    '' AS PTC_NAME,
+                    '' AS PTC_CD,
+                    '' AS BSNS_CD,
+                    0 AS BUD_AM,
+                    0 AS STAC_AM,
+                    '' AS BRDN_BSNS_NAME,
+                    '' AS BRDN_BSNS_NAME2,
+                    '' AS IRIS_BSNS_CD,
+                    '' AS YY,
+                    '' AS PROGRAM_BSNS_CD,
+                    '' AS UNIT_BSNS_CD,
+                    '' AS PTC_BSNS_CD,
+                    '' AS PTC_BSNS_NAME,
+                    '' AS Z1
+            FROM ERND_BIZ_CD
+            ORDER BY BIZ_CD, BIZ_REQST_YR
+            )
+            WHERE 'N' = #{mappingYn}
+        ORDER BY SEQ
+        </if>
+      ) A
+      WHERE 1=1
+      <if test="seleYy != null and seleYy != ''">
+          AND SELE_YY = #{seleYy}
+      </if>
+      <if test="erndBsnsCd != null and erndBsnsCd != ''">
+          AND ERND_BSNS_CD LIKE '%'||UPPER(#{erndBsnsCd})||'%' 
+      </if>
+      <if test="irisBsnsCd != null and irisBsnsCd != ''">
+          AND IRIS_BSNS_CD LIKE '%'||UPPER(#{irisBsnsCd})||'%'
+      </if>
+      <if test="limit != null">
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+      </if>
+    )
+  </select>
     
   <select id="retriveBsnsTempList" resultType="BsnsTempDto" parameterType="BsnsTempDto">      
     SELECT 

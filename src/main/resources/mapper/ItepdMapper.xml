@@ -19,7 +19,31 @@
       IRIS_UPR_ITEPD_CD
     </sql>
 
-    <select id="retriveItepdList" resultType="ItepdDto" parameterType="ItepdDto">      
+  <select id="retriveItepdList" resultType="ItepdDto" parameterType="ItepdDto">      
+  SELECT  ROWNUM AS NO,
+          <include refid="itepdField"/>
+    FROM  IRIS_ITEPD_MAP
+    WHERE 1=1
+    <if test="erndIoeCd != null and erndIoeCd != ''">
+        AND ERND_IOE_CD LIKE '%'||UPPER(#{erndIoeCd})||'%' 
+    </if>
+    <if test="irisItepdCd != null and irisItepdCd != ''">
+        AND IRIS_ITEPD_CD LIKE '%'||UPPER(#{irisItepdCd})||'%'
+    </if>
+    <if test="erndIoeNm != null and erndIoeNm != ''">
+        AND ERND_IOE_NM LIKE '%'||UPPER(#{erndIoeNm})||'%' 
+    </if>
+    <if test="irisItepdCdNm != null and irisItepdCdNm != ''">
+        AND IRIS_ITEPD_CD_NM LIKE '%'||UPPER(#{irisItepdCdNm})||'%'
+    </if>
+    <if test="limit != null">
+      OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+    </if>
+  </select>
+  
+  <select id="retriveItepdListCnt" resultType="Integer" parameterType="ItepdDto">      
+    SELECT COUNT(*) FROM
+    (
     SELECT  ROWNUM AS NO,
             <include refid="itepdField"/>
       FROM  IRIS_ITEPD_MAP
@@ -39,9 +63,8 @@
       <if test="limit != null">
         OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
       </if>
-    </select>
-  
-  
+    )
+  </select>
     
   <select id="retriveItepdTempList" resultType="ItepdTempDto" parameterType="ItepdTempDto">      
     SELECT 
@@ -56,11 +79,11 @@
           <include refid="itepdField"/>,
           CASE WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP IM WHERE IM.ERND_IOE_CD = IMT.ERND_IOE_CD AND IM.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IM.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD ) > 0  THEN '기등록'
           WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP_TEMP IIMT WHERE IIMT.ERND_IOE_CD = IMT.ERND_IOE_CD AND IIMT.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD AND IIMT.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IMT.IRIS_ITEPD_GRP_CD = IIMT.IRIS_ITEPD_GRP_CD AND IIMT.UPLOAD_DE = IMT.UPLOAD_DE AND IIMT.UPLOAD_FILE_NM = IMT.UPLOAD_FILE_NM) > 1  THEN '중복'  
-          /* 비목코드 미존재 확인 추가 */
+          /* Todo 비목코드 미존재 확인 추가 */
           ELSE '' END AS ERROR_MSG,
           CASE WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP IM WHERE IM.ERND_IOE_CD = IMT.ERND_IOE_CD AND IM.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IM.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD ) > 0  THEN 'Y'
           WHEN (SELECT COUNT(*) FROM IRIS_ITEPD_MAP_TEMP IIMT WHERE IIMT.ERND_IOE_CD = IMT.ERND_IOE_CD AND IIMT.IRIS_ITEPD_CD = IMT.IRIS_ITEPD_CD AND IIMT.IRIS_ITEPD_GRP_CD = IMT.IRIS_ITEPD_GRP_CD AND IMT.IRIS_ITEPD_GRP_CD = IIMT.IRIS_ITEPD_GRP_CD AND IIMT.UPLOAD_DE = IMT.UPLOAD_DE AND IIMT.UPLOAD_FILE_NM = IMT.UPLOAD_FILE_NM) > 1 THEN 'Y'     
-          /* 비목코드 미존재 확인 추가 */
+          /* Todo 비목코드 미존재 확인 추가 */
           ELSE 'N' END AS ERROR_YN
     FROM  IRIS_ITEPD_MAP_TEMP IMT
     WHERE 1=1

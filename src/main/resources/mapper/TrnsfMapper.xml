@@ -28,9 +28,10 @@
           ULD_FILE_NM,
           TO_CHAR(TRUNC(ROUND((NVL(END_DT, SYSDATE) - NVL(DMND_DT, SYSDATE)) * 24 * 60 * 60, 2)/ 3600), 'FM9900') || 'h ' ||
           TO_CHAR(TRUNC(MOD(ROUND((NVL(END_DT, SYSDATE) - NVL(DMND_DT, SYSDATE)) * 24 * 60 * 60, 2), 3600)/ 60), 'FM00') || 'm ' ||
-          TO_CHAR(MOD(ROUND((NVL(END_DT, SYSDATE) - NVL(DMND_DT, SYSDATE)) * 24 * 60 * 60, 2), 60), 'FM00') || 's' AS REQ_TM
+          TO_CHAR(MOD(ROUND((NVL(END_DT, SYSDATE) - NVL(DMND_DT, SYSDATE)) * 24 * 60 * 60, 2), 60), 'FM00') || 's' AS REQ_TM,
+          (SELECT COUNT(*) FROM TRNSF_TEMP TT WHERE TT.TRNSF_ID = TM.TRNSF_ID ) AS ULD_ROW_CNT
     FROM
-          TRNSF_MASTER
+          TRNSF_MASTER TM
     WHERE TRNSF_ID = #{trnsfId}
   </select>
   

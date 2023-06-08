@@ -21,4 +21,6 @@ public interface BsnsMapper {
     List<BsnsExcelDto> retriveBsnsExcelList(BsnsExcelDto bsnsExcelDto);
   
     void deleteBsnsTemp(BsnsTempDto bsnsTempDto);
+
+    int retriveBsnsListCnt(BsnsDto bsnsDto);
 }

@@ -41,10 +41,10 @@ public class ItepdService {
       itepdMapper.registItepd(itepdDto);
     }
   }
-  //TODO 임시 service (count Mapper xml 추가필요)
+  
   public int retriveItepdListTotalCnt(ItepdDto itepdDto) {
     itepdDto.setLimit(null);
-    int totalCnt = itepdMapper.retriveItepdList(itepdDto).size();
+    int totalCnt = itepdMapper.retriveItepdListCnt(itepdDto);
     return totalCnt;
   }
 

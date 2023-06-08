@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.spi.DirStateFactory.Result;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,21 +61,36 @@ public class ExcelController<T> {
   
   @PostMapping("/upload")
   public HashMap<String,String> uploadExcelFile(@RequestParam("file") MultipartFile file, @RequestParam("category") String category) throws Exception{
-    // 업로드된 파일 처리 
-    
-    // 엑셀 파일을 읽어서 Temp Table에 저장
-    saveExcelFileTempTable(file, category);
     
     HashMap<String,String> resultMap = new HashMap<String,String>();
-    resultMap.put("result", "success");
-    String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-    resultMap.put("uploadDe",today);
-    resultMap.put("uploadFileNm", file.getOriginalFilename());
+    // 업로드된 파일 처리 
+    try {
+      // 엑셀 파일을 읽어서 Temp Table에 저장
+      int rowCnt = saveExcelFileTempTable(file, category);
+    
+      String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+      resultMap.put("result", "success");
+      resultMap.put("uploadDe",today);
+      resultMap.put("uploadFileNm", file.getOriginalFilename());
+      resultMap.put("uploadRowCnt", String.valueOf(rowCnt));
+      
+    } catch (Exception e) {
+      // 서식오류
+      if(e.getMessage().equals("templateError")){
+        resultMap.put("result", "templateError"); 
+      // 데이터 없음
+      } else if (e.getMessage().equals("sizeError")) {
+        resultMap.put("result", "sizeError"); 
+      // 기타
+      } else {
+        resultMap.put("result", "error");
+      }
+    } 
     
     return resultMap;  
   }
 
-  private List<HashMap<String,String>> saveExcelFileTempTable(MultipartFile file, String category) throws Exception {
+  private int saveExcelFileTempTable(MultipartFile file, String category) throws Exception {
     File convFile = new File( file.getOriginalFilename() );
     
     FileOutputStream fos = new FileOutputStream( convFile );
@@ -113,6 +129,25 @@ public class ExcelController<T> {
         dataList.add(dataMap);
     }
     
+    if(dataList.size() == 0) {
+      convFile.delete();
+      throw new Exception("sizeError");
+    }
+    
+    // 서식 체크
+    boolean templateKeyCheck = false;
+    if (category.equals("bsns")) {
+      templateKeyCheck = checkTemplateKeyExist(BsnsTempDto.class, keyList);
+    } else if(category.equals("itepd")) {
+      templateKeyCheck = checkTemplateKeyExist(ItepdTempDto.class, keyList);
+    } else if(category.equals("trnsfSbjt")) {
+      templateKeyCheck = checkTemplateKeyExist(TrnsfTempDto.class, keyList);
+    }
+    if(!templateKeyCheck){
+      convFile.delete();
+      throw new Exception("templateError");
+    }
+    // category 별 저장
     String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     if (category.equals("bsns")) {
       // BSNS TEMP 테이블 데이터 삭제
@@ -159,9 +194,24 @@ public class ExcelController<T> {
     
     convFile.delete();
     
-    return dataList;
+    return dataList.size();
+  }
+  // 엑셀 서식 체크 (업로드한 엑셀파일의 keyList의 값이 class field에 존재하는지 확인)
+  private static boolean checkTemplateKeyExist(Class<?> classType, List<String> keyList) {
+    boolean result = true;
+    List<String> fieldNameList = new ArrayList<>();
+    for (Field field : classType.getDeclaredFields()) {
+      fieldNameList.add(field.getName()); 
+    }
+    for (String key : keyList) {
+      if (!fieldNameList.contains(key)) {
+          result = false;
+      }
+    }
+    return result;
   }
   
+  // 엑셀 데이터 class에 맞게 변환
   private static <T> T createObject(Class<T> classType, HashMap<String, String> data) throws Exception {
     T obj = classType.getDeclaredConstructor().newInstance();
     for (Field field : classType.getDeclaredFields()) {
@@ -187,7 +237,8 @@ public class ExcelController<T> {
     }
     return obj;
   }
-
+  
+  // cell 데이터 to String
   private String getCellValueToString(Cell cell) {
     String cellValue = "";
     CellType cellType = cell.getCellType();
@@ -222,9 +273,12 @@ public class ExcelController<T> {
   
   @PostMapping("/download")
   public ResponseEntity<Resource> excelDownload(@RequestBody HashMap<String,Object> paramObj) throws IOException {
-
+    
+    // 엑셀 데이터 생성 
+    // ExcelService.java > excelDownload() : 업무별 데이터 생성하도록 함.
     Map<String, Object> excelData = excelService.excelDownload(paramObj);
     
+    // 엑셀 Writer 생성
     ExcelWriter excelWriter = new ExcelWriter();
     excelWriter.setWorkbook();
     excelWriter.setData(excelData);

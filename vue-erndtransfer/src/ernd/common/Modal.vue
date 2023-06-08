@@ -56,23 +56,37 @@ export default {
     window.addEventListener('mouseup', this.handleMouseUp)
   },
   methods: {
-    closeModal() {
+    // 모달창 닫기
+    async closeModal() {
+      // closeFlag가 true일 경우에만 닫기
       if (this.closeFlag) {
         this.$emit('close')
       } else {
-        this.$confirm('저장되지 않은 데이터가 존재합니다.\n저장하시겠습니까?', '알림', {
-          cancelButtonText: '닫기',
+        const h = this.$createElement
+        const confirm = await this.$confirm('', '', {
           confirmButtonText: '확인',
-          callback: action => {
-            if (action === 'confirm') {
-              this.$emit('onSaveBtnClick')
-            } else {
-              this.$emit('close')
-            }
+          cancelButtonText: '닫기',
+          customClass: 'confirm-model',
+          message: h('div', null, [
+            h('i', { class: 'el-icon-check', style: 'color:#f90;font-size:30px;' }),
+            h('span', { style: 'margin-left:10px;font-size:16px;line-height:30px;font-weight:600;vertical-align:top;' }, '확인'),
+            h('p', { style: 'margin:10px 0 0 40px;' }, '저장되지 않은 데이터가 존재합니다.'),
+            h('p', { style: 'margin:10px 0 0 40px;' }, '저장하시겠습니까?'),
+            h('p', { style: 'margin:10px 0 0 40px; color:red;' }, '저장하지 않고 닫으시면 입력한 내용이 삭제됩니다.')
+          ])
+        }).catch((action) => {
+          if (action === 'cancel') {
+            return false
           }
         })
+        if (confirm) {
+          this.$emit('onSaveBtnClick')
+        } else {
+          this.$emit('close')
+        }
       }
     },
+    /* 모달창 드래그 (handleMouseDown, handleMouseMove, handleMouseUp) */
     handleMouseDown(event) {
       this.isDragging = true
       this.lastX = event.clientX
@@ -182,5 +196,13 @@ export default {
   cursor: pointer;
   margin-right: 5px;
   transition: background-color 0.3s ease;
+}
+.confirm-model .el-message-box__btns .el-button:nth-child(1) {
+  float:right;
+}
+.confirm-model .el-message-box__btns .el-button:nth-child(2) {
+  margin-right:10px;
+  background-color:#2d8cf0;
+  border-color:#2d8cf0;
 }
 </style>

@@ -14,11 +14,13 @@
           <div class="progressbar">
             <i :class="classObject" />
           </div>
-          <div class="dropzone" @drop="handleDrop">
+          <div class="dropzone">
             <span>{{ fileName }}</span>
+            <el-button v-show="fileUpload" type="default" size="small" icon="el-icon-delete" @click="handleFileClear" />
             <el-button type="default" @click="openFileSelect">파일선택</el-button>
           </div>
         </div>
+        <!-- fileupload 한 경우만 표시 -->
         <input ref="fileInput" type="file" style="display:none" @change="handleFileChange">
         <el-button type="info" class="download-btn" @click="handleDownload">서식 다운로드</el-button>
         <el-button type="primary" class="upload-btn" @click="handleUpload">파일 업로드</el-button>
@@ -69,6 +71,14 @@ export default {
     listLoading: {
       type: Boolean,
       default: false
+    },
+    uploadResult: {
+      type: String,
+      default: ''
+    },
+    saveResult: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -85,7 +95,44 @@ export default {
       // Grid
       headers: [],
       dataList: [],
-      saveFlag: false
+      saveFlag: false,
+      fileUpload: false
+    }
+  },
+  watch: {
+    // 업로드 결과가 변경되면, 결과에 따른 알림표시
+    uploadResult: {
+      handler: function(val) {
+        this.classObject = {
+          'fas': true,
+          'fa-upload': true
+        }
+        this.fileUpload = false
+        if (val === 'templateError') {
+          this.$refs.fileInput.value = ''
+          this.fileName = ''
+          this.$alert('서식파일이 맞지 않습니다. 파일을 다시 선택해 주십시오.', '알림', {
+            confirmButtonText: '확인',
+            type: 'error'
+          })
+        } else if (val === 'sizeError') {
+          this.$refs.fileInput.value = ''
+          this.fileName = ''
+          this.$alert('저장할 데이터가 존재하지 않습니다. 파일을 다시 선택해 주십시오.', '알림', {
+            confirmButtonText: '확인',
+            type: 'error'
+          })
+        } else if (val === 'success') {
+          this.classObject = {
+            'fas': true,
+            'fa-check': true
+          }
+          this.closeFlag = false
+          // 성공인 경우만, fileUpload flag를 true로 변경
+          this.fileUpload = true
+        }
+      },
+      immediate: true
     }
   },
   async mounted() {
@@ -106,7 +153,46 @@ export default {
       }
     },
     openFileSelect() {
+      if (this.uploadResult === 'success') {
+        this.$alert('업로드가 완료된 파일이 존재합니다. 삭제 후 선택해주십시오.', '알림', {
+          confirmButtonText: '확인',
+          type: 'warning'
+        })
+        return
+      }
       this.$refs.fileInput.click()
+    },
+    async handleFileClear() {
+      const h = this.$createElement
+      const confirm = await this.$confirm('', '', {
+        confirmButtonText: '확인',
+        cancelButtonText: '취소',
+        customClass: 'confirm-model',
+        message: h('div', null, [
+          h('i', { class: 'el-icon-check', style: 'color:#f90;font-size:30px;' }),
+          h('span', { style: 'margin-left:10px;font-size:16px;line-height:30px;font-weight:600;vertical-align:top;' }, '확인'),
+          h('p', { style: 'margin:10px 0 0 40px;' }, '업로드한 파일을 삭제하시겠습니까?')
+        ])
+      }).catch((action) => {
+        if (action === 'cancel') {
+          this.$message({
+            type: 'info',
+            message: '취소되었습니다.'
+          })
+          return false
+        }
+      })
+      if (confirm) {
+        this.$refs.fileInput.value = ''
+        this.fileName = ''
+        this.fileUpload = false
+        this.closeFlag = true
+        this.$emit('onClearList')
+        this.$message({
+          type: 'info',
+          message: '삭제되었습니다.'
+        })
+      }
     },
     handleFileChange(event) {
       const files = event.target.files
@@ -114,50 +200,97 @@ export default {
         this.fileName = files[0].name
       }
     },
-    handleDrop(event) {
-
-    },
-    handleUpload() {
-      this.classObject = {
-        'fas': true,
-        'fa-spinner': true,
-        'fa-spin': true
-      }
+    async handleUpload() {
       const file = this.$refs.fileInput.files[0]
-      // upload를 위해, file 객체 부모 컴포넌트로 전달.
-      const result = this.$emit('onUploadBtnClick', file)
-      if (result) {
+
+      if (file === undefined) {
+        this.$alert('파일이 선택되지 않았습니다.', '알림', {
+          confirmButtonText: '확인',
+          type: 'warning'
+        })
+        return
+      }
+
+      const h = this.$createElement
+      const confirm = await this.$confirm('', '', {
+        confirmButtonText: '확인',
+        cancelButtonText: '취소',
+        customClass: 'confirm-model',
+        message: h('div', null, [
+          h('i', { class: 'el-icon-check', style: 'color:#f90;font-size:30px;' }),
+          h('span', { style: 'margin-left:10px;font-size:16px;line-height:30px;font-weight:600;vertical-align:top;' }, '확인'),
+          h('p', { style: 'margin:10px 0 0 40px;' }, '파일을 업로드하시겠습니까?')
+        ])
+      }).catch((action) => {
+        if (action === 'cancel') {
+          this.$message({
+            type: 'info',
+            message: '취소되었습니다.'
+          })
+        }
+      })
+      if (confirm) {
+        // 업로드 버튼을 누르면, 종료되기 전까지 spinner 표시
         this.classObject = {
           'fas': true,
-          'fa-check': true
+          'fa-spinner': true,
+          'fa-spin': true
         }
-        this.closeFlag = false
+        // upload를 위해, file 객체 부모 컴포넌트로 전달.
+        this.$emit('onUploadBtnClick', file)
       }
     },
     handleDownload() {
       this.$emit('onDownloadBtnClick')
     },
-    saveBtnClick() {
+    async saveBtnClick() {
       this.saveFlag = true
 
       if (this.excelDataList.length === 0) {
-        this.$alert('저장할 데이터가 없습니다.')
+        this.$alert('저장할 데이터가 없습니다.', '알림', {
+          confirmButtonText: '확인',
+          type: 'warning'
+        })
         this.saveFlag = false
       } else {
         for (let i = 0; i < this.excelDataList.length; i++) {
           if (this.excelDataList[i].errorYn === 'Y') {
-            this.$alert('저장할 수 없는 데이터가 존재합니다.')
+            this.$alert('저장할 수 없는 데이터가 존재합니다.', '알림', {
+              confirmButtonText: '확인',
+              type: 'error'
+            })
             this.saveFlag = false
             break
           }
         }
       }
-
       if (this.saveFlag) {
-        const result = this.$emit('onSaveBtnClick')
-        if (result) {
+        await this.$emit('onSaveBtnClick')
+
+        if (this.saveResult === 'success') {
           this.closeFlag = true
-          if (confirm('저장되었습니다. 창을 닫으시겠습니까?')) {
+          const h = this.$createElement
+          const confirm = await this.$confirm('', '', {
+            confirmButtonText: '확인',
+            cancelButtonText: '취소',
+            customClass: 'confirm-model',
+            message: h('div', null, [
+              h('i', { class: 'el-icon-check', style: 'color:#f90;font-size:30px;' }),
+              h('span', { style: 'margin-left:10px;font-size:16px;line-height:30px;font-weight:600;vertical-align:top;' }, '확인'),
+              h('p', { style: 'margin:10px 0 0 40px;' }, '저장되었습니다.'),
+              h('p', { style: 'margin:10px 0 0 40px;' }, '창을 닫으시겠습니까?')
+            ])
+          }).catch((action) => {
+            console.log(action)
+            if (action === 'cancel') {
+              this.$refs.fileInput.value = ''
+              this.fileName = ''
+              this.fileUpload = false
+              this.closeFlag = true
+              this.$emit('onClearList')
+            }
+          })
+          if (confirm) {
             this.closeBtnClick()
           }
         } else {
@@ -269,5 +402,12 @@ export default {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
+.confirm-model .el-message-box__btns .el-button:nth-child(1) {
+  float:right;
+}
+.confirm-model .el-message-box__btns .el-button:nth-child(2) {
+  margin-right:10px;
+  background-color:#2d8cf0;
+  border-color:#2d8cf0;
+}
 </style>

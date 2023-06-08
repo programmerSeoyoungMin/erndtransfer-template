@@ -31,6 +31,8 @@ public class TrnsfMasterDto {
   private String regDtlDt;
   /*업로드파일명*/
   private String uldFileNm;
+  /*업로드 ROW COUNT*/
+  private int uldRowCnt;
   
   /* 진행중인 이관 존재여부 */
   private String prgrsTrnsfExistYn;
