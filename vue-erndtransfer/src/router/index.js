@@ -86,6 +86,20 @@ export const constantRoutes = [
       }
     ]
   },
+  // ernd dashboard
+  {
+    path: '/ernd/main',
+    component: Layout,
+    redirect: '/ernd/main',
+    children: [
+      {
+        path: 'dashboard',
+        component: () => import('@/ernd/view/DashboardTest'),
+        name: 'E-R&D Dashboard',
+        meta: { title: 'E-R&D Dashboard', icon: 'dashboard', affix: true }
+      }
+    ]
+  },
   // {
   //   path: '/documentation',
   //   component: Layout,
