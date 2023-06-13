@@ -76,7 +76,7 @@ import Grid from '@/ernd/common/Grid.vue'
 import Pagination from '@/ernd/common/Pagination.vue'
 import Axios from 'axios'
 export default {
-  name: 'Sbjt',
+  name: 'Ancm',
   components: { PageInfo, SearchTable, Grid, Pagination },
   data() {
     return {

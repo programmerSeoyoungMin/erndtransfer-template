@@ -1,11 +1,13 @@
 <template>
   <div class="app-container">
-    <el-table v-loading="true" header-align="center">
-      <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :align="header.align" header-align="center" show-overflow-tooltip>
-        <template v-slot="{row}">
-          <div v-html="filterHtml(row, header.key, header.type)" />
-        </template>
-      </el-table-column>
+    Error Logs
+    <p>이관진행중 발생한 로그가 표시됩니다(최신순)</p>
+    <el-table
+      v-loading="false"
+      header-align="center"
+      :data="dataList"
+    >
+      <el-table-column v-for="header in headers" :key="header.key" :prop="header.key" :label="header.name" :width="header.width" :align="header.align" header-align="center" />
     </el-table>
   </div>
 
@@ -16,11 +18,20 @@ export default {
   name: 'ErrorLogsVue',
   data() {
     return {
-      headers: [{ key: 'trnsfSe', name: '이관구분', width: '80' },
-        { key: 'sbjtStts', name: '차수', width: '125' },
-        { key: 'erndSbjtNo', name: '발생업무', width: '300' },
-        { key: 'erndFlfmtYy', name: '발생일시', width: '125' }
-      ]
+      headers: [{ key: 'trnsfSe', name: '이관구분', width: '100' },
+        { key: 'trnsfId', name: '이관ID', width: '100' },
+        { key: 'prcdNm', name: '발생업무', width: '200' },
+        { key: 'regDtlDt', name: '발생일시', width: '200' }
+      ],
+      dataList: [{ trnsfSe: '1', trnsfId: '1', prcdNm: '1', regDtlDt: '20000000000' }]
+    }
+  },
+  mounted() {
+    this.search()
+  },
+  methods: {
+    search() {
+      // this.$alert('ErrorLogsVue 조회 ', '검색')
     }
   }
 }
