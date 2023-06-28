@@ -61,10 +61,14 @@ public class TrnsfService {
   public void callIrisPrcd(TrnsfMasterDto trnsfMasterDto) {
     trnsfMapper.callIrisPrcd(trnsfMasterDto);
   }
-
+  
   public void deleteTrnsfUploadFile(TrnsfMasterDto trnsfMasterDto) {
     trnsfMapper.deleteTrnsfTemp(trnsfMasterDto);
     trnsfMapper.deleteTrnsfMaster(trnsfMasterDto);
+  }
+  
+  public void callTrnsfSbjtData(TrnsfMasterDto trnsfMasterDto) {
+    trnsfMapper.callTrnsfSbjtData(trnsfMasterDto);
   }
 
 

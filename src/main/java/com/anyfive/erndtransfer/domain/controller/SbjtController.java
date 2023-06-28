@@ -23,5 +23,9 @@ public class SbjtController {
 
         return resultMap;
     }
+    @PostMapping("insertSbjtMappingData")
+    public void insertSbjtMappingData() {
+        sbjtService.insertSbjtMappingData();
+    }
 
 }

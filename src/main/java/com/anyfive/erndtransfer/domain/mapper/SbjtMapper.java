@@ -11,4 +11,7 @@ public interface SbjtMapper {
 
     List<SbjtDto> retriveSbjtList(SbjtDto sbjtDto);
     List<SbjtExcelDto> retriveSbjtExcelList(SbjtExcelDto sbjtExcelDto);
+
+    void insertSbjtMappingData();
+
 }

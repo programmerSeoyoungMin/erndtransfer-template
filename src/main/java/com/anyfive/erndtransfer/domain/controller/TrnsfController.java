@@ -62,10 +62,8 @@ public class TrnsfController {
     //전체이관 마스터 저장
     if(trnsfMasterDto.getTrnsfId() == null || trnsfMasterDto.getTrnsfId().equals("")) {
       trnsfMasterDto.setTrnsfId(trnsfService.registTrnsfMaster(trnsfMasterDto));
-      //전체이관 마스터는 sbjtNocs 정보 직접 조회하여야 함.
-      /*TODO*/
-      //int sbjtNocs = trnsfService.retriveSbjtNocs(trnsfMasterDto);
-      //trnsfMasterDto.setSbjtNocs(sbjtNocs);
+      //전체이관 대상과제 저장 프로시저 호출
+      trnsfService.callTrnsfSbjtData(trnsfMasterDto);
     } 
     //이관 마스터 진행(DMND_DT 입력)
     trnsfService.updateTrnsfMaster(trnsfMasterDto);

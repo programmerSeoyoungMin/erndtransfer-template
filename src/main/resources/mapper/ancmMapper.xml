@@ -7,8 +7,13 @@
                 ANCM_ID AS IRIS_ANCM_NO,
                 ANCM_SEQ AS ERND_ANCM_NO,
                 BIZ_YR AS ERND_BIZ_YR,
-                ERND_BIZ_CD AS ERND_BIZ_CD
-        FROM IRIS_ANCM_MAP
+                ERND_BIZ_CD AS ERND_BIZ_CD,
+                NVL((SELECT ANCM_TL FROM PS_ANCM B WHERE A.ANCM_ID = B.ANCM_ID ),'-') AS ANCM_NM,
+                TOT_STEP_NGR AS TOT_STEP_CYCL,
+                TOT_ANU_NGR AS WHOL_ANU_CYCL,
+                PRS_STEP_NGR AS PRS_STEP,
+                PRS_ANU_NGR AS PRS_ANU
+                FROM IRIS_ANCM_MAP A
         WHERE 1=1
         <if test="erndAncmNo != null and erndAncmNo != ''">
             AND ANCM_SEQ = #{erndAncmNo}
@@ -28,7 +33,12 @@
                 ANCM_ID AS IRIS_ANCM_NO,
                 ANCM_SEQ AS ERND_ANCM_NO,
                 BIZ_YR AS ERND_BIZ_YR,
-                ERND_BIZ_CD AS ERND_BIZ_CD
+                ERND_BIZ_CD AS ERND_BIZ_CD,
+                NVL((SELECT ANCM_TL FROM PS_ANCM B WHERE A.ANCM_ID = B.ANCM_ID ),'-') AS ANCM_NM,
+                TOT_STEP_NGR AS TOT_STEP_CYCL,
+                TOT_ANU_NGR AS WHOL_ANU_CYCL,
+                PRS_STEP_NGR AS PRS_STEP,
+                PRS_ANU_NGR AS PRS_ANU
         FROM IRIS_ANCM_MAP
         WHERE 1=1
         <if test="erndAncmNo != null and erndAncmNo != ''">
@@ -41,4 +51,9 @@
             AND BIZ_YR = #{erndBizYr}
         </if>
     </select>
+
+    <insert id="insertAncmMappingData" statementType="CALLABLE" >
+        { call PS_ANCM_MAP() }
+        <!-- 주의사항 : { 와 call 사이에는 space 만 허용, tab 입력 시, 오류발생-->
+    </insert>
 </mapper>

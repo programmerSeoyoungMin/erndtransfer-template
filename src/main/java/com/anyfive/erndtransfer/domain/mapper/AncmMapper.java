@@ -11,4 +11,5 @@ public interface AncmMapper {
 
     List<AncmDto> retriveAncmList(AncmDto ancmDto);
     List<AncmExcelDto> retriveAncmExcelList(AncmExcelDto ancmExcelDto);
+    void insertAncmMappingData();
 }

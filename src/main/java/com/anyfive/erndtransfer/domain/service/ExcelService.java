@@ -17,14 +17,14 @@ public class ExcelService {
   
     @Autowired
     private BsnsService bsnsService;
-    
     @Autowired
     private ItepdService itepdService;
-
     @Autowired
     private SbjtService sbjtService;
     @Autowired
     private AncmService ancmService;
+    @Autowired
+    private SbjtTrnsResultService sbjtTrnsResultService;
 
     public Map<String, Object> excelDownload(Map<String,Object> paramMap) {
       Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -77,6 +77,15 @@ public class ExcelService {
         ancmExcelDto.setErndBizYr(paramObjMap.get("erndBizYr"));
         List<AncmExcelDto> ancmExcelList = ancmService.retriveAncmExcelList(ancmExcelDto);
         resultMap = ExcelWriter.createExcelData(ancmExcelList, AncmExcelDto.class);
+      }else if(bsnsDivCd.equals("SBJT_TRNS_RESULT")){
+        SbjtTrnsResultExcelDto sbjtTrnsResultExcelDto = new SbjtTrnsResultExcelDto();
+        sbjtTrnsResultExcelDto.setErndSbjtNo(paramObjMap.get("erndSbjtNo"));
+        sbjtTrnsResultExcelDto.setIrisSbjtId(paramObjMap.get("irisSbjtId"));
+        sbjtTrnsResultExcelDto.setHanSbjtNm(paramObjMap.get("hanSbjtNm"));
+        sbjtTrnsResultExcelDto.setSpvsAgcNm(paramObjMap.get("spvsAgcNm"));
+        sbjtTrnsResultExcelDto.setRschRpbPeRschrRegNm(paramObjMap.get("rschRpbPeRschrRegNm"));
+        List<SbjtTrnsResultExcelDto> sbjtTrnsResultExcelList = sbjtTrnsResultService.retriveSbjtTrnsResultExcelList(sbjtTrnsResultExcelDto);
+        resultMap = ExcelWriter.createExcelData(sbjtTrnsResultExcelList, SbjtTrnsResultExcelDto.class);
       }
       
       return resultMap;

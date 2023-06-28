@@ -17,20 +17,22 @@ public class AncmExcelDto implements ExcelDto{
     private String erndBizYr;
     @ExcelColumnName(headerName = "ERND 사업코드")
     private String erndBizCd;
-    @ExcelColumnName(headerName = "ERND 접수환경명")
-    private String erndAncmNm;
+    @ExcelColumnName(headerName = "접수환경명")
+    private String ancmNm;
     @ExcelColumnName(headerName = "IRIS공고ID")
     private String irisAncmNo;
-    @ExcelColumnName(headerName = "IRIS사업년도")
-    private String irisBizYy;
-    @ExcelColumnName(headerName = "IRIS사업코드")
-    private String irisBizCd;
-    @ExcelColumnName(headerName = "IRIS접수환경명")
-    private String irisAncmNm;
+    @ExcelColumnName(headerName = "총단계차수")
+    private String totStepCycl;
+    @ExcelColumnName(headerName = "전체연차차수")
+    private String wholAnuCycl;
+    @ExcelColumnName(headerName = "현재단계")
+    private String prsStep;
+    @ExcelColumnName(headerName = "현재연차")
+    private String prsAnu;
 
 
     @Override
     public List<String> mapToList() {
-        return Arrays.asList(no,erndAncmNo,erndBizYr,erndBizCd,erndAncmNm,irisAncmNo,irisBizYy,irisBizCd,irisAncmNm);
+        return Arrays.asList(no,erndAncmNo,erndBizYr,erndBizCd,ancmNm,irisAncmNo,totStepCycl,wholAnuCycl,prsStep,prsAnu);
     }
 }

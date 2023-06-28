@@ -4,23 +4,28 @@
 <mapper namespace="com.anyfive.erndtransfer.domain.mapper.SbjtMapper">
     <select id="retriveSbjtList" resultType="SbjtDto" parameterType="SbjtDto">
         SELECT  ROWNUM AS NO,
-                SBJT_NO AS IRIS_SBJT_NO,
-                BIZ_YR AS IRIS_FLFMT_YY,
-                ERND_SBJT_NO AS ERND_SBJT_NO,
-                BIZ_REQST_YR AS ERND_SBJT_YY
-        FROM IRIS_SBJT_MAP
+                A.SBJT_NO AS IRIS_SBJT_NO,
+                A.BIZ_YR AS IRIS_FLFMT_YY,
+                A.ERND_SBJT_NO AS ERND_SBJT_NO,
+                A.BIZ_REQST_YR AS ERND_FLFMT_YY,
+                A.KR_SBJT_NM AS SBJT_NM,
+                CASE WHEN B.SBJT_STATUS_CD = '00001' THEN '진행중'
+                     WHEN B.SBJT_STATUS_CD = '00002' THEN '종료'
+                     ELSE '중단' END AS  SBJT_STTS
+        FROM IRIS_SBJT_MAP A, TMN_STEP_ANU_SBJT B
         WHERE 1=1
+        AND A.ACP_SBJT_NO = B.ACP_SBJT_NO
         <if test="erndSbjtNo != null and erndSbjtNo != ''">
-            AND ERND_SBJT_NO = #{erndSbjtNo}
+            AND A.ERND_SBJT_NO = #{erndSbjtNo}
         </if>
         <if test="irisSbjtNo != null and irisSbjtNo != ''">
-            AND SBJT_NO = #{irisSbjtNo}
+            AND A.SBJT_NO = #{irisSbjtNo}
         </if>
         <if test="erndFlfmtYy != null and erndFlfmtYy != ''">
-            AND BIZ_REQST_YR = #{erndFlfmtYy}
+            AND A.BIZ_REQST_YR = #{erndFlfmtYy}
         </if>
-        <if test="sbjtStts != 'A'">
-            AND BIZ_REQST_YR = #{sbjtStts}
+        <if test="sbjtStts != ''">
+            AND B.SBJT_STATUS_CD = #{sbjtStts}
         </if>
         <if test="limit != null">
             OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
@@ -28,23 +33,31 @@
     </select>
     <select id="retriveSbjtExcelList" resultType="SbjtExcelDto" parameterType="SbjtExcelDto">
         SELECT  ROWNUM AS NO,
-        SBJT_NO AS IRIS_SBJT_NO,
-        BIZ_YR AS IRIS_FLFMT_YY,
-        ERND_SBJT_NO AS ERND_SBJT_NO,
-        BIZ_REQST_YR AS ERND_SBJT_YY
-        FROM IRIS_SBJT_MAP
+        A.SBJT_NO AS IRIS_SBJT_NO,
+        A.BIZ_YR AS IRIS_FLFMT_YY,
+        A.ERND_SBJT_NO AS ERND_SBJT_NO,
+        A.BIZ_REQST_YR AS ERND_SBJT_YY,
+        A.KR_SBJT_NM AS SBJT_NM,
+        CASE WHEN B.SBJT_STATUS_CD = '00001' THEN '진행중'
+        WHEN B.SBJT_STATUS_CD = '00002' THEN '종료'
+        ELSE '중단' END AS  SBJT_STTS
+        FROM IRIS_SBJT_MAP A, TMN_STEP_ANU_SBJT B
         WHERE 1=1
         <if test="erndSbjtNo != null and erndSbjtNo != ''">
-            AND ERND_SBJT_NO = #{erndSbjtNo}
+            AND A.ERND_SBJT_NO = #{erndSbjtNo}
         </if>
         <if test="irisSbjtNo != null and irisSbjtNo != ''">
-            AND SBJT_NO = #{irisSbjtNo}
+            AND A.SBJT_NO = #{irisSbjtNo}
         </if>
         <if test="erndFlfmtYy != null and erndFlfmtYy != ''">
-            AND BIZ_REQST_YR = #{erndFlfmtYy}
+            AND A.BIZ_REQST_YR = #{erndFlfmtYy}
         </if>
-        <if test="sbjtStts != 'A'">
-            AND BIZ_REQST_YR = #{sbjtStts}
+        <if test="sbjtStts != ''">
+            AND B.SBJT_STATUS_CD = #{sbjtStts}
         </if>
     </select>
+    <insert id="insertSbjtMappingData" statementType="CALLABLE" >
+        { call PS_SBJT_MAP() }
+        <!-- 주의사항 : { 와 call 사이에는 space 만 허용, tab 입력 시, 오류발생-->
+    </insert>
 </mapper>

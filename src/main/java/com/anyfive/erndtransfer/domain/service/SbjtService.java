@@ -19,4 +19,7 @@ public class SbjtService {
     public List<SbjtExcelDto> retriveSbjtExcelList(SbjtExcelDto sbjtExcelDto) {
         return sbjtMapper.retriveSbjtExcelList(sbjtExcelDto);
     }
+    public void insertSbjtMappingData(){
+        sbjtMapper.insertSbjtMappingData();
+    }
 }

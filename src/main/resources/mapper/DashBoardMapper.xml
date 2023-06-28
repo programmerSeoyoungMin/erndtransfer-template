@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.DashBoardMapper">
+  <select id="retriveMainPanel" resultType="MainPanelDto">
+    
+    SELECT CASE
+              WHEN TRNSF_SBJT_NOCS <![CDATA[ >= ]]> 1e6 THEN ROUND (TRNSF_SBJT_NOCS / 1e6) || 'M'
+              WHEN TRNSF_SBJT_NOCS <![CDATA[ >= ]]> 1e3 THEN ROUND (TRNSF_SBJT_NOCS / 1e3) || 'K'
+              ELSE TO_CHAR (TRNSF_SBJT_NOCS)
+          END AS TRNSF_SBJT_NOCS,
+          TRNSF_RT,
+          CASE
+              WHEN NON_TRNSF_NOCS <![CDATA[ >= ]]> 1e6 THEN ROUND (NON_TRNSF_NOCS / 1e6) || 'M'
+              WHEN NON_TRNSF_NOCS <![CDATA[ >= ]]> 1e3 THEN ROUND (NON_TRNSF_NOCS / 1e3) || 'K'
+              ELSE TO_CHAR (NON_TRNSF_NOCS)
+          END
+              AS NON_TRNSF_NOCS,
+          ERR_OCCR_RT
+    FROM 
+    (
+      SELECT                                                            
+            /* 이관 과제수 */
+            (SELECT COUNT (*) FROM PS_SBJT) AS TRNSF_SBJT_NOCS
+            /* 이관 진행율 */
+            ,(SELECT   ROUND (
+                            (SELECT COUNT (*) FROM PS_SBJT)
+                          / (SELECT COUNT (*)
+                              FROM IRIS_SBJT_MAP
+                              WHERE     SBJT_FRM_CD NOT IN ('00004',
+                                                            '00001',
+                                                            '00014',
+                                                            '00008')
+                                    AND ERND_SBJT_NO IS NOT NULL
+                                    AND BIZ_CD IN (SELECT ERND_BSNS_CD
+                                                    FROM IRIS_BSNS_CD_MAP)),
+                          2)
+                    * 100
+                FROM DUAL)
+                AS TRNSF_RT
+            /* 이관 불가 과제 수 */
+            ,(SELECT COUNT (*)
+                FROM TMN_STEP_ANU_SBJT
+              WHERE ACP_SBJT_NO NOT IN (SELECT ACP_SBJT_NO FROM IRIS_ANU_SBJT_MAP))
+                AS NON_TRNSF_NOCS
+            /* 오류 발생율 */
+            ,(SELECT   ROUND (
+                            (SELECT COUNT (*) FROM TRNSF_PRCD_ERR_DTL)
+                          / (SELECT SUM (TRNSF_DATA_NOCS)
+                              FROM TRNSF_PRCD_FLFMT_RSLT),
+                          2)
+                    * 100
+                FROM DUAL)    
+                AS ERR_OCCR_RT
+            ,(SELECT COUNT(DISTINCT IRIS_KEY_VL) FROM TRNSF_PRCD_ERR_DTL) AS ERR_NOCS
+        FROM DUAL
+    )
+  </select>
+  <!-- 미매핑 건수 -->
+  <select id="retriveNonTransferablePanelNoMapping" resultType="NonTransferablePanelDto">
+    SELECT (SELECT COUNT(*) FROM ERND_BIZ_CD WHERE BIZ_REQST_YR||BIZ_CD NOT IN (SELECT SELE_YY_BSNS_CD FROM IRIS_BSNS_CD_MAP)) AS BSNS_NOCS  
+          ,(SELECT COUNT(DISTINCT ACP_ENV_NO) FROM TAC_ACP_ENV WHERE ACP_ENV_NO NOT IN (SELECT ANCM_SEQ FROM IRIS_ANCM_MAP) AND BIZ_YR||BIZ_CD IN (SELECT SELE_YY_BSNS_CD FROM IRIS_BSNS_CD_MAP)) AS ANCM_NOCS
+          ,(SELECT COUNT(*) FROM TMN_STEP_ANU_SBJT WHERE ACP_SBJT_NO NOT IN (SELECT ACP_SBJT_NO FROM IRIS_ANU_SBJT_MAP) AND BIZ_REQST_YR||BIZ_CD IN (SELECT SELE_YY_BSNS_CD FROM IRIS_BSNS_CD_MAP)) AS SBJT_NOCS
+          ,(SELECT COUNT(*) FROM TCM_IOE WHERE UPR_IOE_CD||IOE_CD NOT IN (SELECT ERND_UPR_IOE_CD||ERND_IOE_CD FROM IRIS_ITEPD_MAP)) AS ITEPD_NOCS
+    FROM   DUAL
+  </select>
+  <!-- 미이관 건수(mapping table 에는 있으나, iris 데이터에 존재하지 않는 경우-->
+  <select id="retriveNonTransferablePanelNonTransfer" resultType="NonTransferablePanelDto">
+    SELECT (SELECT COUNT(*) FROM IRIS_BSNS_CD_MAP WHERE YY||IRIS_BSNS_CD NOT IN (SELECT BSNS_YY||SORGN_BSNS_CD FROM PS_SORGN_YY_BSNS)) AS BSNS_NOCS 
+          ,(SELECT COUNT(*) FROM IRIS_ANCM_MAP WHERE ANCM_SEQ NOT IN (SELECT ANCM_SEQ FROM PS_ANCM)) AS ANCM_NOCS
+          ,(SELECT COUNT(*) FROM IRIS_SBJT_MAP WHERE SBJT_NO NOT IN (SELECT SBJT_ID FROM PS_SBJT)) AS SBJT_NOCS
+          ,(SELECT COUNT(*) FROM IRIS_ITEPD_MAP WHERE IRIS_ITEPD_CD NOT IN (SELECT DISTINCT ITEPD_CD FROM PS_SBJT_ITEPD_RSCT)) AS ITEPD_NOCS
+    FROM   DUAL
+  </select>
+  
+  <select id="retriveNonTransferablePanelNoPreData" resultType="NonTransferablePanelDto">
+    SELECT 0 AS BSNS_NOCS  
+      ,(SELECT COUNT(DISTINCT ACP_ENV_NO) FROM TAC_ACP_ENV WHERE ACP_ENV_NO IN (SELECT ANCM_SEQ FROM IRIS_ANCM_MAP) AND BIZ_YR||BIZ_CD NOT IN (SELECT SELE_YY_BSNS_CD FROM IRIS_BSNS_CD_MAP)) AS ANCM_NOCS
+      ,(SELECT COUNT(DISTINCT A.ACP_SBJT_NO) FROM TMN_STEP_ANU_SBJT A WHERE A.ACP_SBJT_NO IN (SELECT ACP_SBJT_NO FROM IRIS_ANU_SBJT_MAP) AND (A.BIZ_REQST_YR || A.BIZ_CD NOT IN (SELECT SELE_YY_BSNS_CD FROM IRIS_BSNS_CD_MAP))) AS SBJT_NOCS
+      ,0 AS ITEPD_NOCS
+    FROM   DUAL
+  </select>
+  <select id="retriveAvgTime" resultType="Double" >
+    WITH TEMP AS (
+        /*과제*/
+        SELECT 'A' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND  TASK_SE IN ('A1','A4')
+        UNION ALL
+        /*연차과제*/
+        SELECT 'B' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND  TASK_SE  = 'A3'
+        UNION ALL
+        /*기술*/
+        SELECT 'C' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND A.PRCD_ID = 'WEB_TRNSF_SBJT_TECL'
+        UNION ALL
+        /*보안*/
+        SELECT 'D' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND A.PRCD_ID = 'WEB_TRNSF_SBJT_SCUR'
+        UNION ALL
+        /*계획서*/
+        SELECT 'E' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND A.PRCD_ID = 'WEB_TRNSF_SBJT_PLDOC'
+        UNION ALL
+        /*키워드*/
+        SELECT 'F' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND A.PRCD_ID = 'WEB_TRNSF_SBJT_KWD'
+        UNION ALL
+        /*비목*/
+        SELECT 'G' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND A.PRCD_ID = 'WEB_TRNSF_SBJT_ITEPD_RSCT'
+        UNION ALL
+        /*협약*/
+        SELECT 'H' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND TASK_SE  = 'A9'
+        UNION ALL
+        /*기관*/
+        SELECT 'I' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND A.PRCD_ID  = 'WEB_TRNSF_SBJT_ORGN'
+        UNION ALL
+        /*연구인력*/
+        SELECT 'J' AS CODE,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 ),3) AS HH,
+               ROUND(SUM((B.END_DT - B.BRNG_DT) * 24 * 60 ),3) AS MM,
+               COUNT(B.TRNSF_ID) AS CNT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND A.PRCD_ID  IN ( 'WEB_TRNSF_SBJT_ASMT_RSCT','WEB_TRNSF_SBJT_RSCHR','WEB_TRNSF_SBJT_RSCR_PTCP'))
+        /*SELECT TO_CHAR(ROUND((HH/CNT),2),'FM9900')||'h'|| TO_CHAR(ROUND((MM/CNT),2),'FM00')||'m' AS AVG_TIME*/
+    SELECT ROUND((HH/CNT),2) AS AVG_TIME
+    FROM TEMP
+    ORDER BY CODE ASC
+  </select>
+  <select id="retriveErrLogs" resultType="DashboardErrLogsDto" >
+    SELECT *
+    FROM (
+             SELECT DECODE(A.TRNSF_SE,'TA','전체','개별') AS TRNSF_SE,
+                    A.TRNSF_ID,
+                    C.PRCD_NM,
+                    TO_CHAR(B.REG_DTL_DT, 'YYYY-MM-DD HH24:mm:SS') AS REG_DTL_DT
+             FROM TRNSF_MASTER A,
+                  TRNSF_PRCD_ERR_MASTER B,
+                  PRCD_INFO C
+             WHERE 1=1
+               AND  A.TRNSF_ID = B.TRNSF_ID
+               AND B.PRCD_ID = C.PRCD_ID
+             ORDER BY B.REG_DTL_DT DESC
+         )
+    WHERE ROWNUM <![CDATA[<]]> 11
+  </select>
+    <select id="retriveDataMappingRto" resultType="Integer" >
+        -- 사업
+        SELECT  ROUND((B.IRIS_CNT/A.ERND_CNT) *100,0) AS RTO
+        FROM ( SELECT COUNT(*) AS ERND_CNT
+               FROM ERND_BIZ_CD
+             ) A,
+             (
+                 SELECT COUNT(1) AS IRIS_CNT
+                 FROM IRIS_BSNS_CD_MAP A, ERND_BIZ_CD B
+                 WHERE 1=1
+                   AND A.SELE_YY_BSNS_CD = B.BIZ_REQST_YR||B.BIZ_CD
+             ) B
+        UNION ALL
+        -- 공고
+        SELECT  ROUND((B.IRIS_CNT/A.ERND_CNT) *100,0) AS RTO
+        FROM ( SELECT COUNT(ACP_ENV_NO) AS ERND_CNT
+               FROM TAC_ACP_ENV
+             ) A,
+             (
+                 SELECT COUNT(*) AS IRIS_CNT
+                 FROM IRIS_ANCM_MAP A, TAC_ACP_ENV B
+                 WHERE 1=1
+                   AND A.ANCM_SEQ = B.ACP_ENV_NO
+             ) B
+        UNION ALL
+        -- 과제
+        SELECT  ROUND((B.IRIS_CNT/A.ERND_CNT) *100,0) AS RTO
+        FROM ( SELECT COUNT(ACP_SBJT_NO) AS ERND_CNT
+               FROM TMN_STEP_ANU_SBJT
+             ) A,
+             (
+                 SELECT COUNT(*) AS IRIS_CNT
+                 FROM IRIS_ANU_SBJT_MAP A, TMN_STEP_ANU_SBJT B
+                 WHERE 1=1
+                   AND A.ACP_SBJT_NO = B.ACP_SBJT_NO
+             ) B
+        UNION ALL
+        --비목
+        SELECT  ROUND((B.IRIS_CNT/A.ERND_CNT) *100,0) AS RTO
+        FROM ( SELECT COUNT(*) AS ERND_CNT
+               FROM TCM_IOE
+             ) A,
+             (
+                 SELECT COUNT(*) AS IRIS_CNT
+                 FROM IRIS_ITEPD_MAP A, TCM_IOE B
+                 WHERE 1=1
+                   AND A.ERND_UPR_IOE_CD||A.ERND_IOE_CD = B.UPR_IOE_CD||B.IOE_CD
+             ) B
+        UNION ALL
+        --기관
+        SELECT  ROUND((B.IRIS_CNT/A.ERND_CNT) *100,0) AS RTO
+        FROM ( SELECT COUNT(*) AS ERND_CNT
+               FROM TCM_AGC
+             ) A,
+             (
+                 SELECT COUNT(*) AS IRIS_CNT
+                 FROM IRIS_AGC_MAP A, TCM_AGC B
+                 WHERE 1=1
+                   AND A.AGC_ID = B.AGC_ID
+             ) B
+        UNION ALL
+        --인력
+        SELECT  ROUND((B.IRIS_CNT/A.ERND_CNT) *100,0) AS RTO
+        FROM ( SELECT COUNT(*) AS ERND_CNT
+               FROM TMN_SBJT_TPI_HR
+             ) A,
+             (
+                 SELECT COUNT(*) AS IRIS_CNT
+                 FROM IRIS_RSCHR_MAP A, TMN_SBJT_TPI_HR B
+                 WHERE 1=1
+                   AND A.RSCHR_REG_NO = B.TPI_HR_RSCHR_REG_NO
+             ) B
+    </select>
+</mapper>

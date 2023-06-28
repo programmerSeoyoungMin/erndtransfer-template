@@ -20,7 +20,7 @@
               </el-col>
               <el-col :span="9">
                 <el-form-item label-width="180px" label="IRIS 과제번호">
-                  <span class="form-item">{{ sbjtTrnsResult.irisSbjtid }}</span>
+                  <span class="form-item">{{ sbjtTrnsResult.irisSbjtId }}</span>
                 </el-form-item>
               </el-col>
               <el-col :span="18">
@@ -210,7 +210,7 @@ export default {
         erndSbjtNo: '', // e-R&D 과제번호
         hirkSorgnBsnsCd: '', // 상위 전문기관 사업 코드
         hirkSorgnBsnsCdNm: '', // 상위 전문기관 사업 명
-        irisSbjtid: '', // IRIS과제번호
+        irisSbjtId: '', // IRIS과제번호
         sorgnBsnsCd: '', // 전문기관 사업 코드
         sorgnBsnsNm: '', // 전문기관 사업 명
         pbofrTpSe: '', // 공모 유형 구분[AB1]
@@ -266,20 +266,35 @@ export default {
     }
   },
   async mounted() {
-    const headerDto = {
-      taskSeTblNm: this.taskSeTblNm
-    }
-    const response = await Axios.post('http://localhost:8080/common/retriveHeaderList', headerDto)
-    this.headers = response.data
-    this.sbjtTrnsResult = { ptcBsnsName: '국제연구인력교류(R&D)', brdnBsnsName: '해외우수과학자유치사업(BP+)', ancmTl: '유럽입자물리연구소 참여부담금', ancmNo: 'NR_2012_10251', bsnsYy: '2012', hirkSorgnBsnsCd: 'NR01667', hirkSorgnBsnsCdNm: '기초연구기반구축(R&D)', sorgnBsnsCd: 'NR03813', sorgnBsnsNm: '유럽핵입자물리연구소(CERN) 협력', pbofrTpSe: 'AB1100', bsnsAncmTl: '유럽입자물리연구소 참여부담금', cortiumCpstSe: 'AX7003', sbjtRcveFormSe: 'AT6001', rschPridStngSe: '자율구성(NRF)', ttlGvstmAm: '0', ovrlSbjtId: '', hanOvrlRndNm: '', engOvrlRndNm: '', sbjtId: 'NR006679', hanSbjtNm: '한국-CERN 이론물리 공동연구 및 신진 인력 양성', engSbjtNm: 'Korea-CERN Theoretical Physics Collaboration and Developing Young High-Energy Theorists', prgSbjtExeAnnl: '1', prgBsnsYy: '2012', prgSorgnBsnsCd: 'NR03813', scurDtlSe: '', ttlRschPrid: '2012-05-01~2015-04-30', rschOrgnId: 'G0210719', rschOrgnNm: '한국물리학회', natSe: 'PH1410', rscrNm: '홍덕기', sorgnNm: '한국연구재단', rndSbjtNo: 'NR-2012051781', ovrlRndSbjtNo: '', erndSbjtNo: '2020H1D3A2A03099291', irisSbjtid: 'NR146637', rschPridCpstSe: '단계없는과제' }
-    this.sbjtKwd = { kr1KwdNm: '유전자변형마우스', kr2KwdNm: '마우스 이차 표현형', kr3KwdNm: '대사표현형분석', kr4KwdNm: '운동표현형분석', kr5KwdNm: '인프라 구축', en1KwdNm: 'GEM', en2KwdNm: 'Advanced phenotype', en3KwdNm: 'Metabolic phenotype', en4KwdNm: 'Exercise phenotype', en5KwdNm: 'Infrastructure' }
-    this.dataList = [
-      { sbjtStep: '일반', sbjtAnnl: '1', rschOrgnRoleSeNm: '주관', rschOrgnNm: '주식회사 펠레메드', itepdCdNm: '직접비', bndsCashAm: '1000', bndsSpotAm: '2350', bndsTotAm: '0', bndsNpayAm: '1350' },
-      { sbjtStep: '일반', sbjtAnnl: '1', rschOrgnRoleSeNm: '주관', rschOrgnNm: '주식회사 펠레메드', itepdCdNm: '인건비', bndsCashAm: '2030', bndsSpotAm: '0', bndsTotAm: '0', bndsNpayAm: '1000' },
-      { sbjtStep: '일반', sbjtAnnl: '1', rschOrgnRoleSeNm: '주관', rschOrgnNm: '주식회사 펠레메드', itepdCdNm: '학생인건비', bndsCashAm: '5000', bndsSpotAm: '2200', bndsTotAm: '2000', bndsNpayAm: '250' },
-      { sbjtStep: '일반', sbjtAnnl: '1', rschOrgnRoleSeNm: '주관', rschOrgnNm: '주식회사 펠레메드', itepdCdNm: '통합학생인건비', bndsCashAm: '1000', bndsSpotAm: '0', bndsTotAm: '3300', bndsNpayAm: '300' },
-      { sbjtStep: '일반', sbjtAnnl: '1', rschOrgnRoleSeNm: '주관', rschOrgnNm: '주식회사 펠레메드', itepdCdNm: '장비비', bndsCashAm: '1300', bndsSpotAm: '0', bndsTotAm: '0', bndsNpayAm: '2200' }
-    ]
+    const searchParams = {}
+    searchParams.rndSbjtNo = this.rndSbjtNo
+
+    // 과제기본정보조회
+    await Axios.post('http://localhost:8080/result/retriveSbjtTrnsResultDetail', searchParams)
+      .then(response => {
+        this.sbjtTrnsResult = response.data
+      })
+      .catch(error => {
+        console.log(error)
+      })
+    // 과제 키워드 조회
+    searchParams.sbjtId = this.sbjtTrnsResult.irisSbjtId
+
+    await Axios.post('http://localhost:8080/result/retriveSbjtTrnsResultKwd', searchParams)
+      .then(response => {
+        this.sbjtKwd = response.data
+      })
+      .catch(error => {
+        console.log(error)
+      })
+    // 연구비조회
+    await Axios.post('http://localhost:8080/result/retriveSbjtTrnsResultItepdList', searchParams)
+      .then(response => {
+        this.dataList = response.data
+      })
+      .catch(error => {
+        console.log(error)
+      })
     document.querySelectorAll('.sbjtTable .el-form-item__label').forEach((item) => {
       item.style.backgroundColor = '#efefef'
       item.style.borderRight = '1px solid #ddd'

@@ -14,6 +14,7 @@
 </template>
 
 <script>
+import Axios from 'axios'
 export default {
   name: 'ErrorLogsVue',
   data() {
@@ -23,7 +24,7 @@ export default {
         { key: 'prcdNm', name: '발생업무', width: '200' },
         { key: 'regDtlDt', name: '발생일시', width: '200' }
       ],
-      dataList: [{ trnsfSe: '1', trnsfId: '1', prcdNm: '1', regDtlDt: '20000000000' }]
+      dataList: []
     }
   },
   mounted() {
@@ -31,7 +32,13 @@ export default {
   },
   methods: {
     search() {
-      // this.$alert('ErrorLogsVue 조회 ', '검색')
+      Axios.get('http://localhost:8080/dashBoard/retriveErrLogs')
+        .then(response => {
+          this.dataList = response.data
+        })
+        .catch(error => {
+          console.log(error)
+        })
     }
   }
 }

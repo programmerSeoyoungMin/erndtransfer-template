@@ -21,4 +21,7 @@ public class AncmService {
     public List<AncmExcelDto> retriveAncmExcelList(AncmExcelDto ancmExcelDto) {
         return ancmMapper.retriveAncmExcelList(ancmExcelDto);
     }
+    public void insertAncmMappingData(){
+        ancmMapper.insertAncmMappingData();
+    }
 }

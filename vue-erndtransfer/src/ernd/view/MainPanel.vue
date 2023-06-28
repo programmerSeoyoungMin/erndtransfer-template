@@ -9,9 +9,12 @@
           <div class="card-panel-text">
             이관과제 수
           </div>
-          <count-to :start-val="0" :end-val="102400" :duration="2600" class="card-panel-num" />
+          <div class="card-panel-num">
+            {{ mainPanel.trnsfSbjtNocs }}+
+          </div>
+          <!-- <count-to :start-val="0" :end-val="mainPanel.trnsfSbjtNocs" class="card-panel-num" /> -->
           <div class="card-panel-detail-text">
-            Error(s) {{ errorCount }}
+            Error(s) {{ mainPanel.errNocs }}
           </div>
         </div>
       </div>
@@ -25,7 +28,8 @@
           <div class="card-panel-text">
             이관 진행률
           </div>
-          <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="mainPanel.trnsfRt" class="card-panel-num" />
+          <span class="card-panel-num">%</span>
           <div class="card-panel-detail-text">
             사업 정제된 과제 기준
           </div>
@@ -41,7 +45,10 @@
           <div class="card-panel-text">
             이관불가 과제 수
           </div>
-          <count-to :start-val="0" :end-val="9280" :duration="3200" class="card-panel-num" />
+          <div class="card-panel-num">
+            {{ mainPanel.nonTrnsfNocs }}+
+          </div>
+          <!-- <count-to :start-val="0" :end-val="mainPanel.nonTrnsfNocs"  class="card-panel-num" /> -->
           <div class="card-panel-detail-text">
             사업,공고 미정제 과제 기준
           </div>
@@ -57,7 +64,8 @@
           <div class="card-panel-text">
             오류발생률
           </div>
-          <count-to :start-val="0" :end-val="13600" :duration="3600" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="mainPanel.errOccrRt" class="card-panel-num" />
+          <span class="card-panel-num">%</span>
           <div class="card-panel-detail-text">
             이관 총 데이터 기준
           </div>
@@ -69,6 +77,7 @@
 
 <script>
 import CountTo from 'vue-count-to'
+import Axios from 'axios'
 
 export default {
 
@@ -77,8 +86,19 @@ export default {
   },
   data() {
     return {
-      errorCount: 0
+      mainPanel: {
+        trnsfSbjtNocs: '',
+        trnsfRt: 0,
+        nonTrnsfNocs: '',
+        errOccrRt: 0,
+        errNocs: 0
+      }
     }
+  },
+  async mounted() {
+    // 메인패널 정보 표기
+    const mainPanelInformationRes = await Axios.post('http://localhost:8080/dashBoard/retriveMainPanel', '')
+    this.mainPanel = mainPanelInformationRes.data
   },
   methods: {
 

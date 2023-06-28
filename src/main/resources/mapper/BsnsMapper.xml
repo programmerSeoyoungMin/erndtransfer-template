@@ -183,6 +183,7 @@
                     '' AS PTC_BSNS_NAME,
                     '' AS Z1
             FROM ERND_BIZ_CD
+            WHERE BIZ_REQST_YR||BIZ_CD NOT IN (SELECT SELE_YY_BSNS_CD FROM IRIS_BSNS_CD_MAP)
             ORDER BY BIZ_CD, BIZ_REQST_YR
             )
             WHERE 'N' = #{mappingYn}
@@ -294,6 +295,7 @@
                     '' AS PTC_BSNS_NAME,
                     '' AS Z1
             FROM ERND_BIZ_CD
+            WHERE BIZ_REQST_YR||BIZ_CD NOT IN (SELECT SELE_YY_BSNS_CD FROM IRIS_BSNS_CD_MAP)
             ORDER BY BIZ_CD, BIZ_REQST_YR
             )
             WHERE 'N' = #{mappingYn}

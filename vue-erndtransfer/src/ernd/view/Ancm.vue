@@ -24,7 +24,7 @@
 
         <el-col>
           <el-form-item label-width="180px" label="e-R&D 사업년도">
-            <el-date-picker v-model="ancmSearchForm.bizYr" type="year" placeholder="년도선택" />
+            <el-date-picker v-model="ancmSearchForm.erndBizYr" type="year" placeholder="년도선택" />
           </el-form-item>
         </el-col>
       </template>
@@ -88,18 +88,19 @@ export default {
       ancmSearchForm: {
         erndAncmNo: '',
         irisAncmNo: '',
-        bizYr: ''
+        erndBizYr: ''
       },
       listLoading: false,
-      headers: [{ key: 'no', name: '순번', width: '80' },
-        { key: 'erndAncmNo', name: 'ERND 접수환경번호', width: '150' },
-        { key: 'erndBizYr', name: 'ERND 사업년도', width: '150' },
-        { key: 'erndBizCd', name: 'ERND 사업코드', width: '200' },
-        { key: 'erndAncmNm', name: 'ERND 접수환경명', width: '450' },
-        { key: 'irisAncmNo', name: 'IRIS공고ID', width: '200' },
-        { key: 'irisBizYy', name: 'IRIS사업년도', width: '200' },
-        { key: 'irisBizCd', name: 'IRIS사업코드', width: '200' },
-        { key: 'irisAncmNm', name: 'IRIS접수환경명', width: '200' }
+      headers: [{ key: 'no', name: '순번', width: '50', align: 'center' },
+        { key: 'erndAncmNo', name: 'ERND 접수환경번호', width: '150', align: 'center' },
+        { key: 'erndBizYr', name: 'ERND 사업년도', width: '150', align: 'center' },
+        { key: 'erndBizCd', name: 'ERND 사업코드', width: '150', align: 'center' },
+        { key: 'ancmNm', name: '접수환경명', width: '500', align: 'right' },
+        { key: 'irisAncmNo', name: 'IRIS공고ID', width: '200', align: 'center' },
+        { key: 'totStepCycl', name: '총단계차수', width: '200', align: 'center' },
+        { key: 'wholAnuCycl', name: '전체연차차수', width: '200', align: 'center' },
+        { key: 'prsStep', name: '현재단계', width: '200', align: 'center' },
+        { key: 'prsAnu', name: '현재차수', width: '200', align: 'center' }
       ],
       dataList: [],
       selectedRow: null
@@ -107,12 +108,29 @@ export default {
   },
   mounted() {
     const today = new Date()
-    this.ancmSearchForm.bizYr = today.getFullYear() + ''
+    this.ancmSearchForm.erndBizYr = today.getFullYear() + ''
     this.search()
   },
   methods: {
     search() {
-      this.$alert('current page = ' + this.pager.currentPage + ', row limit = ' + this.pager.limit, '검색')
+      this.listLoading = true
+      const searchParams = this.ancmSearchForm
+      // pagingInfo 검색조건 설정
+      searchParams.erndBizYr = new Date(this.ancmSearchForm.erndBizYr).getFullYear() + ''
+      searchParams.currentPage = this.pager.currentPage
+      searchParams.limit = this.pager.limit
+
+      Axios.post('http://localhost:8080/ancm/retriveAncmList', searchParams)
+        .then(response => {
+          this.dataList = response.data.ancmList
+          this.pager.total = response.data.totalCnt
+        })
+        .catch(error => {
+          console.log(error)
+        })
+        .finally(() => {
+          this.listLoading = false
+        })
     },
     setRowLimit(val) {
       if (val !== undefined) this.pager.limit = val
@@ -121,9 +139,14 @@ export default {
       )
       this.search()
     },
-    dataMapBtnClick(row) {
-      this.selectedRow = row
-      console.log(this.selectedRow)
+    dataMapBtnClick() {
+      const confirm = this.$confirm('데이터 정제 하시겠습니까?')
+      if (confirm) {
+        Axios.post('http://localhost:8080/ancm/insertAncmMappingData')
+          .catch(error => {
+            console.log(error)
+          })
+      }
     },
     excelDownloadClick() {
       const downloadUrl = 'http://localhost:8080/excel/download'

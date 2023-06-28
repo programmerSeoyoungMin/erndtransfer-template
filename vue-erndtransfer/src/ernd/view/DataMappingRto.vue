@@ -5,6 +5,7 @@
 <script>
 import resize from '../common/resize'
 import echarts from 'echarts'
+import Axios from 'axios'
 require('echarts/theme/macarons') // echarts theme
 export default {
 
@@ -24,7 +25,14 @@ export default {
       default: '350px'
     }
   },
-  mounted() {
+  data() {
+    return {
+      dataMappingRtoData: []
+    }
+  },
+  async mounted() {
+    const selectData = await Axios.get('http://localhost:8080/dashBoard/retriveDataMappingRto')
+    this.dataMappingRtoData = selectData.data
     this.initChart()
   },
   methods: {
@@ -135,14 +143,7 @@ export default {
               }
             }
           },
-          data: [
-            88,
-            90,
-            75,
-            75,
-            90,
-            88
-          ]
+          data: this.dataMappingRtoData
         }
         ]
       })

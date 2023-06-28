@@ -14,11 +14,11 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class CommonService {
 
-      private final CommonMapper CommonMapper;
+  private final CommonMapper CommonMapper;
 
-      @Transactional(readOnly = true)
-      public List<HeaderDto> retriveHeaderList(HeaderDto dto) {
-            return CommonMapper.retriveHeaderList(dto);
-      }
+  @Transactional(readOnly = true)
+  public List<HeaderDto> retriveHeaderList(HeaderDto dto) {
+        return CommonMapper.retriveHeaderList(dto);
+  }
 
 }

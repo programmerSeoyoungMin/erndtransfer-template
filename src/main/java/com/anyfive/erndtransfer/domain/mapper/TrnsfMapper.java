@@ -34,9 +34,11 @@ public interface TrnsfMapper {
   void registTrnsfPrcdFlfmtRslt(TrnsfMasterDto trnsfMasterDto);
 
   void callIrisPrcd(TrnsfMasterDto trnsfMasterDto);
-
+  
   void deleteTrnsfMaster(TrnsfMasterDto trnsfMasterDto);
   
   void deleteTrnsfTemp(TrnsfMasterDto trnsfMasterDto);
+  
+  void callTrnsfSbjtData(TrnsfMasterDto trnsfMasterDto);
 
 }

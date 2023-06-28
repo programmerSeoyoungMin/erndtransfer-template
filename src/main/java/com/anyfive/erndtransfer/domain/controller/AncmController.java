@@ -25,5 +25,9 @@ public class AncmController {
 
         return resultMap;
     }
+    @PostMapping("insertAncmMappingData")
+    public void insertAncmMappingData() {
+        ancmService.insertAncmMappingData();
+    }
 
 }

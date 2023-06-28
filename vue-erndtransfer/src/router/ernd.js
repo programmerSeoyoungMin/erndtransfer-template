@@ -72,6 +72,12 @@ const erndRouter = {
       meta: { title: '데이터 이관결과', icon: 'folder-solid', noCache: true },
       children: [
         {
+          path: 'dataTrnsfRslt',
+          component: () => import('@/ernd/view/DataTrnsfRslt'),
+          name: '이관 진행 결과',
+          meta: { title: '이관 진행 결과', icon: 'magnifying-glass-solid', noCache: true }
+        },
+        {
           path: 'inquiry',
           component: () => import('@/ernd/view/ResultInq'),
           name: '이관결과 미리보기',

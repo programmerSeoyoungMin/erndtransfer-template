@@ -6,6 +6,7 @@
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from '../common/resize'
+import Axios from 'axios'
 
 export default {
   name: 'TrnsfPrcdTime',
@@ -34,18 +35,13 @@ export default {
   },
   data() {
     return {
-      chart: null
+      chart: null,
+      trnsfPrcdTimeData: []
     }
   },
-  watch: {
-    chartData: {
-      deep: true,
-      handler(val) {
-        this.setOptions(val)
-      }
-    }
-  },
-  mounted() {
+  async mounted() {
+    const selectData = await Axios.get('http://localhost:8080/dashBoard/retriveAvgTime')
+    this.trnsfPrcdTimeData = selectData.data
     this.$nextTick(() => {
       this.initChart()
     })
@@ -68,6 +64,7 @@ export default {
           text: '이관프로시저별 평균 소요시간',
           x: '0',
           top: '0',
+          left: '15',
           textStyle: {
             color: '#0C0C0CFF',
             fontSize: '15'
@@ -103,7 +100,7 @@ export default {
           data: ['이관시간(분)']
         },
         series: [{
-          name: '이관시간(분)', itemStyle: {
+          name: '이관시간(h)', itemStyle: {
             normal: {
               color: '#2688F5FF',
               lineStyle: {
@@ -114,7 +111,7 @@ export default {
           },
           smooth: true,
           type: 'line',
-          data: [10, 15, 82, 5, 6, 8, 21, 48, 55, 60],
+          data: this.trnsfPrcdTimeData,
           animationDuration: 2600,
           animationEasing: 'cubicInOut'
         }]

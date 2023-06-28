@@ -10,11 +10,13 @@ public class AncmDto extends PagingDto{
     private String erndAncmNo;
     private String erndBizYr;
     private String erndBizCd;
-    private String erndAncmNm;
+    private String ancmNm;
     private String irisAncmNo;
-    private String irisBizYy;
-    private String irisBizCd;
-    private String irisAncmNm;
+    private String totStepCycl;
+    private String wholAnuCycl;
+    private String prsStep;
+    private String prsAnu;
+
 
 
 

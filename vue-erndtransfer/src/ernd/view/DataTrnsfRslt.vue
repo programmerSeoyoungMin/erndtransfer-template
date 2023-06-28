@@ -12,11 +12,12 @@
       <template v-slot:body>
         <el-col :span="9">
           <el-form-item label-width="180px" label="이관구분">
-            <el-select v-model="trnsfSe" placeholder="Select">
+            <el-select v-model="dataTrnsfRsltSearchForm.trnsfSe" placeholder="-- 선택 --">
               <el-option
                 v-for="item in options"
                 :key="item.trnsfSe"
                 :label="item.label"
+                :value="item.trnsfSe"
               />
             </el-select>
           </el-form-item>
@@ -26,10 +27,11 @@
             <el-date-picker
               v-model="dataTrnsfRsltSearchForm.trnsfDt"
               type="daterange"
+              value-format="yyyyMMdd"
+              format="yyyy-MM-dd"
               start-placeholder="Start Date"
               end-placeholder="End Date"
               placeholder="일자선택"
-              :picker-options="pickerOptions"
             />
           </el-form-item>
         </el-col>
@@ -66,7 +68,7 @@
     <pagination v-show="dataList.length > 0" :pager="pager" />
     <!--  이관목록 상세 그리드   -->
     <grid
-      v-if="detailTable"
+      v-show="detailTable"
       :grid-name="'이관목록상세'"
       :headers="detailHeaders"
       :data-list="detailDataList"
@@ -78,10 +80,11 @@
       :data-map-btn="false"
       :excel-upload="false"
       :excel-download="false"
+      @onCellDblClick="cellDblClick"
     >
       <template v-slot:rows>
         <el-table-column label="오류상세" align="center" width="100" header-align="center">
-          <el-button type="info" @click="detailModal">
+          <el-button type="info">
             <i class="el-icon-search" />
           </el-button>
         </el-table-column>
@@ -89,6 +92,9 @@
     </grid>
     <TrnsResultModal
       v-if="showModal"
+      ref="trnsfResultModal"
+      :prcd-id="prcdId"
+      :trnsf-id="trnsfId"
       :list-loading="listLoading"
       @close="closeBtnClick"
     />
@@ -101,86 +107,92 @@ import SearchTable from '@/ernd/common/SearchTable'
 import Grid from '@/ernd/common/Grid.vue'
 import Pagination from '@/ernd/common/Pagination.vue'
 import TrnsResultModal from '@/ernd/common/TrnsResultModal.vue'
+import Axios from 'axios'
+import row from 'element-ui/packages/row'
 export default {
   name: 'DataTrnsfRslt',
   components: { SearchTable, Grid, Pagination, TrnsResultModal },
   data() {
     return {
       showModal: false,
+      errDtlBtn: false,
+      trnsfId: '',
+      prcdId: '',
       pager: {
         currentPage: 1,
         limit: 10,
         total: 1
       },
       dataTrnsfRsltSearchForm: {
-        trnsfDt: ''
+        trnsfStrtDt: '',
+        trnsfEndDt: '',
+        trnsfSe: '',
+        trnsfId: '',
+        prcdId: '',
+        trnsfDt: []
       },
       listLoading: false,
       headers: [
         { key: 'trnsfSe', name: '이관구분', width: '130' },
         { key: 'uldFileNm', name: '파일명', width: '450' },
-        { key: 'dmndDt', name: '이관일시', width: '200' },
-        { key: 'trnsfDataTnocs', name: '총건수', width: '150' },
+        { key: 'trnsfYmd', name: '이관일시', width: '200' },
         { key: 'sbjtNocs', name: '과제건수', width: '150' },
         { key: 'errNocs', name: '오류건수', width: '150' }
       ],
       detailHeaders: [
-        { key: 'trnsfSe', name: '업무구분', width: '130' },
-        { key: 'uldFileNm', name: 'SOURCE', width: '200' },
-        { key: 'dmndDt', name: 'TARGET', width: '200' },
-        { key: 'trnsfDataTnocs', name: '이관데이터건수', width: '150' },
-        { key: 'sbjtNocs', name: '오류건수', width: '150' }
+        { key: 'prcdNm', name: '업무구분', width: '200' },
+        { key: 'trnsfTbl', name: 'SOURCE', width: '200' },
+        { key: 'prcdId', name: 'TARGET', width: '200' },
+        { key: 'trnsfDataNocs', name: '이관데이터건수', width: '150' },
+        { key: 'errNocs', name: '오류건수', width: '150' }
       ],
-      dataList: [{ trnsfSe: 'trnsfSe', uldFileNm: '이관구분', dmndDt: '130', trnsfDataTnocs: '', sbjtNocs: '', errNocs: '' },
-        { trnsfSe: 'dddddd', uldFileNm: '이관구분', dmndDt: '130', trnsfDataTnocs: '', sbjtNocs: '', errNocs: '' }],
-      detailDataList: [{ trnsfSe: 'trnsfSe', uldFileNm: '이관구분', dmndDt: '130', trnsfDataTnocs: '', sbjtNocs: '' }],
+      dataList: [],
+      detailDataList: [],
       selectedRow: null,
       detailTable: false,
       options: [{
-        trnsfSe: 'B',
+        trnsfSe: 'TA',
         label: '전체'
       }, {
-        trnsfSe: 'C',
+        trnsfSe: 'TE',
         label: '개별'
-      }],
-      trnsfSe: '-- 선택 --',
-      pickerOptions: {
-        shortcuts: [{
-          text: 'Last week',
-          onClick(picker) {
-            const end = new Date()
-            const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-            picker.$emit('pick', [start, end])
-          }
-        }, {
-          text: 'Last month',
-          onClick(picker) {
-            const end = new Date()
-            const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
-            picker.$emit('pick', [start, end])
-          }
-        }, {
-          text: 'Last 3 months',
-          onClick(picker) {
-            const end = new Date()
-            const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
-            picker.$emit('pick', [start, end])
-          }
-        }]
-      }
+      }]
+    }
+  },
+  computed: {
+    row() {
+      return row
     }
   },
   mounted() {
-    const start = new Date()
-    this.dataTrnsfRsltSearchForm.trnsfDt = [start.getTime() - 3600 * 1000 * 24 * 7, start]
+    const today = new Date()
+    this.dataTrnsfRsltSearchForm.trnsfDt = [this.dateToString(today), this.dateToString(today)]
     this.search()
   },
   methods: {
     search() {
-      this.$alert('current page = ' + this.dataTrnsfRsltSearchForm.trnsfDt + ', row limit = ' + this.pager.limit, '검색')
+      this.detailTable = false
+      this.listLoading = true
+      const searchParams = this.dataTrnsfRsltSearchForm
+      const strtDt = this.dataTrnsfRsltSearchForm.trnsfDt[0]
+      const endDt = this.dataTrnsfRsltSearchForm.trnsfDt[1]
+      searchParams.currentPage = this.pager.currentPage
+      searchParams.limit = this.pager.limit
+      searchParams.trnsfStrtDt = strtDt
+      searchParams.trnsfEndDt = endDt
+
+      Axios.post('http://localhost:8080/trnsfRslt/retriveTrnsfRsltList', searchParams)
+        .then(response => {
+          this.dataList = response.data.trnsRsltList
+          this.pager.total = response.data.totalCnt
+          console.log(this.dataList)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+        .finally(() => {
+          this.listLoading = false
+        })
     },
     setRowLimit(val) {
       if (val !== undefined) this.pager.limit = val
@@ -189,41 +201,40 @@ export default {
       )
       this.search()
     },
-    getDetailList(row) {
+    getDetailList(val) {
       this.detailTable = true
-      console.log(
-        this.$alert('getDetail ', '검색')
-      )
+      const searchParams = this.dataTrnsfRsltSearchForm
+      // pagingInfo 검색조건 설정
+      searchParams.trnsfId = val.trnsfId
+      this.dataTrnsfRsltSearchForm.trnsfId = val.trnsfId
+      Axios.post('http://localhost:8080/trnsfRslt/retriveTrnsfRsltDtl', searchParams)
+        .then(response => {
+          this.detailDataList = response.data.trnsfRsltDtl
+        })
+        .catch(error => {
+          console.log(error)
+        })
+        .finally(() => {
+          this.listLoading = false
+        })
     },
-    handleCurrentChange(val) {
-      this.search()
-    },
-    detailModal() {
-      this.showModal = true
-    },
-    filterHtml(row, key, type) {
-      const html = {
-        openTag: '<span>',
-        value: '',
-        closeTag: '</span>'
+    cellDblClick(row, column, cell, event) {
+      this.trnsfId = row.trnsfId
+      this.prcdId = row.prcdId
+      if (column.label === '오류상세') {
+        this.showModal = true
+        this.$refs.trnsfResultModal.errSearch()
       }
-      if (row[key] != null && row[key] !== '') {
-        // type이 number인 경우, 3자리마다 콤마 추가
-        if (type != null && type === 'number') {
-          html.value = row[key].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-          // type이 popup인 경우, decoration 추가
-        } else if (type != null && type === 'popup') {
-          html.openTag = '<i class="fa-solid fa-caret-right"></i> <span style="text-decoration:underline;cursor:pointer">'
-          html.value = row[key]
-        } else {
-          html.value = row[key]
-        }
-      }
-
-      return html.openTag + html.value + html.closeTag
     },
     closeBtnClick() {
       this.showModal = false
+    },
+    dateToString(date) {
+      const newDate = new Date(date)
+      const newDateYear = newDate.getFullYear() + ''
+      const newMonth = '0' + (newDate.getMonth() + 1)
+      const newDay = newDate.getDate() + ''
+      return newDateYear + newMonth + newDay
     }
   }
 }

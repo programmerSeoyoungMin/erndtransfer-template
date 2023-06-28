@@ -21,12 +21,12 @@
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="이관일시">
-                    <el-input type="text" disabled="disabled" :value="dmndDt" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.brngDt" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="업무구분">
-                    <el-input type="text" disabled="disabled" :value="procdNm" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.prcdNm" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
@@ -36,12 +36,12 @@
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="SOURCE">
-                    <el-input type="text" disabled="disabled" :value="bscTb" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.trnsfTbl" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="TARGET">
-                    <el-input type="text" disabled="disabled" :value="trnsfTb" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.bscTbl" />
                   </el-form-item>
                 </el-col>
               </slot>
@@ -56,37 +56,37 @@
               <slot name="body">
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="오류코드">
-                    <el-input type="text" disabled="disabled" :value="errCd" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.errCd" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="오류발생일시">
-                    <el-input type="text" disabled="disabled" :value="regDtlDt" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.regDtlDt" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="20">
                   <el-form-item label-width="130px" label="오류내용">
-                    <el-input type="text" disabled="disabled" :value="errCn" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.errCn" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="SOURCE KEY DESC">
-                    <el-input type="text" disabled="disabled" :value="erndKeyCn" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.erndKeyCn" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="TARGET KEY DESC">
-                    <el-input type="text" disabled="disabled" :value="irisKeyCn" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.irisKeyCn" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="SOURCE KEY">
-                    <el-input type="text" disabled="disabled" :value="erndKey" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.erndKeyVl" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="10">
                   <el-form-item label-width="130px" label="TARGET KEY">
-                    <el-input type="text" disabled="disabled" :value="irisKey" />
+                    <el-input type="text" disabled="disabled" :value="errDtlData.irisKeyVl" />
                   </el-form-item>
                 </el-col>
               </slot>
@@ -101,20 +101,66 @@
 <script>
 import Modal from '@/ernd/common/Modal.vue'
 import '@fortawesome/fontawesome-free/css/all.css'
+import Axios from 'axios'
 export default {
   name: 'TrnsResultPopUp',
   components: { Modal },
+  props: {
+    trnsfId: {
+      type: String,
+      default: ''
+    },
+    prcdId: {
+      type: String,
+      default: ''
+    }
+  },
   data() {
     return {
-      id: '124'
-
+      errDtlForm: {
+        prcdId: '',
+        trnsfId: ''
+      },
+      errDtlData: {
+        trnsfDataNocs: '',
+        errCd: '',
+        errCn: '',
+        erndKeyVl: '',
+        erndKeyCn: '',
+        irisKeyVl: '',
+        irisKeyCn: '',
+        regDtlDt: '',
+        brngDt: '',
+        prcdId: '',
+        prcdNm: '',
+        trnsfTbl: '',
+        bscTbl: ''
+      }
     }
+  },
+  mounted() {
+    this.errSearch()
   },
   closeFlag: false,
   methods: {
     closeBtnClick() {
       this.closeFlag = true
       this.$emit('close')
+    },
+    errSearch() {
+      const searchParams = this.errDtlForm
+      searchParams.prcdId = this.prcdId
+      searchParams.trnsfId = this.trnsfId
+      Axios.post('http://localhost:8080/trnsfRslt/retriveTrnsfErrDtl', searchParams)
+        .then(response => {
+          this.errDtlData = response.data.trnsfErrDtl
+        })
+        .catch(error => {
+          console.log(error)
+        })
+        .finally(() => {
+          this.listLoading = false
+        })
     }
   }
 

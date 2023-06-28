@@ -88,7 +88,7 @@
         WHERE TRNSF_ID = #{trnsfId}
         ORDER BY NO
   </select>
-  
+    
   <insert id="registTrnsfMaster" parameterType="TrnsfMasterDto" >
     <selectKey keyProperty="trnsfId" resultType="String" order="BEFORE">
       SELECT #{trnsfSe} ||'_'|| TO_CHAR(COUNT(TRNSF_ID)+1,'FM9900000') AS TRNSF_ID FROM TRNSF_MASTER WHERE TRNSF_SE = #{trnsfSe}
@@ -131,6 +131,11 @@
   
   <update id="callIrisPrcd" statementType="CALLABLE" parameterType="TrnsfMasterDto">
     { call IRIS_TRANSFER(#{trnsfId, mode=IN, jdbcType=VARCHAR, javaType=string}) }
+    <!-- 주의사항 : { 와 call 사이에는 space 만 허용, tab 입력 시, 오류발생-->
+  </update>
+  
+  <update id="callTrnsfSbjtData" statementType="CALLABLE" parameterType="TrnsfMasterDto">
+    { call TRNSF_SBJT_DATA(#{trnsfId, mode=IN, jdbcType=VARCHAR, javaType=string}) }
     <!-- 주의사항 : { 와 call 사이에는 space 만 허용, tab 입력 시, 오류발생-->
   </update>
   

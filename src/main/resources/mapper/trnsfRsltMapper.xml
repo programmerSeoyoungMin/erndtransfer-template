@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.TrnsfRsltMapper">
+    <select id="retriveTrnsfRsltList" resultType="TrnsfRsltDto" parameterType="TrnsfRsltDto">
+        SELECT A.TRNSF_ID,
+                DECODE(A.TRNSF_SE,'TA','전체','개별') AS TRNSF_SE ,
+                NVL(A.ULD_FILE_NM,'-') AS ULD_FILE_NM,
+                A.SBJT_NOCS,
+                A.TRNSF_YMD,
+                SUM(B.ERR_NOCS) AS ERR_NOCS
+        FROM TRNSF_MASTER A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE A.TRNSF_ID = B.TRNSF_ID
+        <if test="trnsfSe != null and trnsfSe != ''">
+            AND A.TRNSF_SE = #{trnsfSe}
+        </if>
+        <if test="trnsfStrtDt != null and trnsfStrtDt != ''">
+            AND TO_CHAR(A.TRNSF_YMD, 'YYYYMMDD') BETWEEN #{trnsfStrtDt} AND #{trnsfEndDt}
+        </if>
+        GROUP BY A.TRNSF_ID,
+                A.TRNSF_SE,
+                A.ULD_FILE_NM,
+                A.SBJT_NOCS,
+                A.TRNSF_YMD
+        <if test="limit != null">
+            OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+        </if>
+    </select>
+    <select id="retriveTrnsfRsltDtl" resultType="TrnsfRsltDto" parameterType="TrnsfRsltDto">
+        SELECT A.PRCD_ID,
+               A.PRCD_NM,
+               A.TRNSF_TBL,
+               B.TRNSF_ID,
+               B.TRNSF_DATA_NOCS,
+               B.ERR_NOCS
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND B.TRNSF_ID = #{trnsfId}
+        ORDER BY A.PRCD_ORD ASC
+    </select>
+    <select id="retriveTrnsfErrDtl" resultType="TrnsfRsltDto" parameterType="TrnsfRsltDto">
+        SELECT A.PRCD_ID,
+               A.PRCD_NM,
+               A.TRNSF_TBL,
+               A.BSC_TBL,
+               B.TRNSF_ID,
+               D.ERR_CD,
+               D.ERR_CN,
+               D.ERND_KEY_VL,
+               D.ERND_KEY_CN,
+               D.IRIS_KEY_VL,
+               D.IRIS_KEY_CN,
+               D.REG_DTL_DT
+        FROM PRCD_INFO A, TRNSF_PRCD_FLFMT_RSLT B,
+             TRNSF_PRCD_ERR_MASTER C, TRNSF_PRCD_ERR_DTL D
+        WHERE 1=1
+          AND A.PRCD_ID = B.PRCD_ID
+          AND B.TRNSF_ID = C.TRNSF_ID
+          AND C.ERR_ID = D.ERR_ID
+          AND B.TRNSF_ID = #{trnsfId}
+          AND A.PRCD_ID = #{prcdId}
+    </select>
+</mapper>

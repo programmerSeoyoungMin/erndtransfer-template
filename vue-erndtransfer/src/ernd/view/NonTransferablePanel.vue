@@ -6,6 +6,7 @@
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from '../common/resize'
+import Axios from 'axios'
 
 const animationDuration = 300
 
@@ -28,10 +29,35 @@ export default {
   },
   data() {
     return {
-      chart: null
+      chart: null,
+      noMapping: [],
+      nonTransfer: [],
+      noPreData: []
     }
   },
-  mounted() {
+  async mounted() {
+    // 메인패널 정보 표기
+    const noMappingRes = await Axios.post('http://localhost:8080/dashBoard/retriveNonTransferablePanelNoMapping', '')
+    const arrNoMapping = []
+    Object.keys(noMappingRes.data).forEach(function(v) {
+      arrNoMapping.push(noMappingRes.data[v])
+    })
+    this.noMapping = arrNoMapping
+
+    const nonTransferRes = await Axios.post('http://localhost:8080/dashBoard/retriveNonTransferablePanelNonTransfer', '')
+    const arrNonTransfer = []
+    Object.keys(nonTransferRes.data).forEach(function(v) {
+      arrNonTransfer.push(nonTransferRes.data[v])
+    })
+    this.nonTransfer = arrNonTransfer
+
+    const noPreDataRes = await Axios.post('http://localhost:8080/dashBoard/retriveNonTransferablePanelNoPreData', '')
+    const arrNoPreData = []
+    Object.keys(noPreDataRes.data).forEach(function(v) {
+      arrNoPreData.push(noPreDataRes.data[v])
+    })
+    this.noPreData = arrNoPreData
+
     this.$nextTick(() => {
       this.initChart()
     })
@@ -48,6 +74,16 @@ export default {
       this.chart = echarts.init(this.$el, 'macarons')
 
       this.chart.setOption({
+        title: {
+          text: '정제데이터 이관불가 현황',
+          x: '0',
+          top: '0',
+          left: '15',
+          textStyle: {
+            color: '#0C0C0CFF',
+            fontSize: '15'
+          }
+        },
         tooltip: {
           trigger: 'axis',
           axisPointer: { // 축 표시기, 축 트리거 활성
@@ -55,7 +91,7 @@ export default {
           }
         },
         grid: {
-          top: 10,
+          top: 40,
           left: '2%',
           right: '2%',
           bottom: '3%',
@@ -63,7 +99,7 @@ export default {
         },
         xAxis: [{
           type: 'category',
-          data: ['사업', '과제', '비목', '기관', '인력', '기타'],
+          data: ['사업', '공고', '과제', '비목'],
           axisTick: {
             alignWithLabel: true
           }
@@ -78,36 +114,22 @@ export default {
           name: '미매핑',
           type: 'bar',
           stack: 'vistors',
-          barWidth: '50%',
-          data: [79, 52, 200, 334, 390, 330],
+          barWidth: '60%',
+          data: this.noMapping,
           animationDuration
         }, {
-          name: 'CASE1',
+          name: '미이관',
           type: 'bar',
           stack: 'vistors',
-          barWidth: '50%',
-          data: [80, 52, 200, 334, 390, 330],
+          barWidth: '60%',
+          data: this.nonTransfer,
           animationDuration
         }, {
-          name: 'CASE2',
+          name: '선행데이터 미존재',
           type: 'bar',
           stack: 'vistors',
-          barWidth: '50%',
-          data: [30, 52, 200, 334, 390, 330],
-          animationDuration
-        }, {
-          name: 'CASE3',
-          type: 'bar',
-          stack: 'vistors',
-          barWidth: '50%',
-          data: [52, 200, 334, 30, 390, 330],
-          animationDuration
-        }, {
-          name: 'CASE4',
-          type: 'bar',
-          stack: 'vistors',
-          barWidth: '50%',
-          data: [80, 52, 200, 334, 390, 330],
+          barWidth: '60%',
+          data: this.noPreData,
           animationDuration
         }
         ]

@@ -9,7 +9,7 @@ public class SbjtDto extends PagingDto{
     private int No;
     private String erndSbjtNo;
     private String erndFlfmtYy;
-    private String erndsbjtNm;
+    private String sbjtNm;
     private String irisSbjtNo;
     private String irisFlfmtYy;
     private String sbjtStts;

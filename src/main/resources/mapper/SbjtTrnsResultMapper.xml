@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.anyfive.erndtransfer.domain.mapper.SbjtTrnsResultMapper">
+
+ 
+  <select id="retriveSbjtTrnsResultList" resultType="SbjtTrnsResultListDto" parameterType="SbjtTrnsResultListDto">      
+    SELECT ROWNUM AS NO, A.*
+      FROM (
+            SELECT  BS_M.PTC_BSNS_NAME
+                  , BS_M.BRDN_BSNS_NAME
+                  , (SELECT COMM_CD_NM FROM PO_COMM_CD WHERE COMM_CD = SBJT_PROPL_STRC_SE AND COMM_GRP_CD = 'AD4') AS SBJT_PROPL_STRC_SE_NM
+                  , SB.BSNS_YY AS SELE_YY
+                  , RND_SBJT_NO
+                  , NVL(SB_M.ERND_SBJT_NO, (SELECT MAX(ERND_SBJT_NO) FROM IRIS_ANU_SBJT_MAP ANU_M WHERE ANU_M.SBJT_NO = SB_M.SBJT_NO)) AS STEP_ANU_SBJT_NO
+                  , SB.HAN_SBJT_NM
+                  , SRO.RSCH_ORGN_NM AS SPVS_AGC_NM
+                  , SRM.RSCR_NM AS RSCH_RPB_PE_RSCHR_REG_NM
+                  , BS_M.JRSD_NAME AS BIZ_DEPART_NM
+                  , TO_CHAR(STA.RSCH_STR_DE, 'YYYY-MM-DD') || '~' || TO_CHAR(STA.RSCH_END_DE, 'YYYY-MM-DD') AS TOT_RSCH_DATE
+                FROM PS_SBJT SB
+                    , IRIS_BSNS_CD_MAP BS_M
+                    , IRIS_SBJT_MAP SB_M
+                    , PS_SBJT_TOT_ANNL  STA
+                    , PS_SBJT_RSCH_ORGN SRO
+                    , PS_SBJT_RSCH_MBR  SRM
+              WHERE SB.SORGN_BSNS_CD = BS_M.IRIS_BSNS_CD
+                AND SB.SBJT_ID = SB_M.SBJT_NO
+                AND STA.SBJT_ID(+) = SB.SBJT_ID
+                AND STA.RND_RANG_SE(+) = 'AJ4002'
+                AND STA.SBJT_STEP(+) = 0 /* 종합연차 */
+                AND STA.LAST_YN(+) = 'Y'
+                AND SRO.SBJT_ID(+) = SB.SBJT_ID
+                AND SRO.SBJT_EXE_ANNL(+) = SB.PRG_SBJT_EXE_ANNL
+                AND SRO.RSCH_ORGN_ROLE_SE(+) = 'AB2101' /* 주관연구기관 */
+                AND SRO.LAST_YN(+) = 'Y'
+                AND SRM.SBJT_ID(+) = SRO.SBJT_ID
+                AND SRM.SBJT_EXE_ANNL(+) = SRO.SBJT_EXE_ANNL
+                AND SRM.RSCH_ORGN_ID(+) = SRO.RSCH_ORGN_ID
+                AND SRM.RSCH_ORGN_ROLE_SE(+) = SRO.RSCH_ORGN_ROLE_SE
+                AND SRM.RSCR_ROLE_SE(+) = 'AB4101' /* 책임자 */
+                AND SRM.LAST_YN(+) = 'Y'
+                AND SB.SBJT_ID LIKE 'NR%'
+                <if test="erndSbjtNo != null and erndSbjtNo != ''">
+                    AND SB_M.ERND_SBJT_NO LIKE '%' || #{erndSbjtNo} || '%'
+                </if>
+                <if test="irisSbjtId != null and irisSbjtId != ''">
+                  AND SB_M.SBJT_NO LIKE '%' || #{irisSbjtId} || '%'
+                </if>
+                <if test="hanSbjtNm != null and hanSbjtNm != ''">
+                  AND SB.HAN_SBJT_NM LIKE '%' || #{hanSbjtNm} || '%' 
+                </if>
+                <if test="spvsAgcNm != null and spvsAgcNm != ''">
+                  AND SRO.RSCH_ORGN_NM LIKE '%' || #{spvsAgcNm} || '%'  
+                </if>
+                <if test="rschRpbPeRschrRegNm != null and rschRpbPeRschrRegNm != ''">
+                  AND SRM.RSCR_NM LIKE '%' || #{rschRpbPeRschrRegNm} || '%'
+                </if>
+              ORDER BY RSCH_END_DE DESC
+      ) A
+      <if test="limit != null">
+        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+      </if>
+  </select>
+  
+  
+  <select id="retriveSbjtTrnsResultListCnt" resultType="Integer" parameterType="SbjtTrnsResultListDto">     
+    SELECT COUNT(*) 
+      FROM PS_SBJT SB
+          , IRIS_BSNS_CD_MAP BS_M
+          , IRIS_SBJT_MAP SB_M
+          , PS_SBJT_TOT_ANNL  STA
+          , PS_SBJT_RSCH_ORGN SRO
+          , PS_SBJT_RSCH_MBR  SRM
+    WHERE SB.SORGN_BSNS_CD = BS_M.IRIS_BSNS_CD
+      AND SB.SBJT_ID = SB_M.SBJT_NO
+      AND STA.SBJT_ID(+) = SB.SBJT_ID
+      AND STA.RND_RANG_SE(+) = 'AJ4002'
+      AND STA.SBJT_STEP(+) = 0 /* 종합연차 */
+      AND STA.LAST_YN(+) = 'Y'
+      AND SRO.SBJT_ID(+) = SB.SBJT_ID
+      AND SRO.SBJT_EXE_ANNL(+) = SB.PRG_SBJT_EXE_ANNL
+      AND SRO.RSCH_ORGN_ROLE_SE(+) = 'AB2101' /* 주관연구기관 */
+      AND SRO.LAST_YN(+) = 'Y'
+      AND SRM.SBJT_ID(+) = SRO.SBJT_ID
+      AND SRM.SBJT_EXE_ANNL(+) = SRO.SBJT_EXE_ANNL
+      AND SRM.RSCH_ORGN_ID(+) = SRO.RSCH_ORGN_ID
+      AND SRM.RSCH_ORGN_ROLE_SE(+) = SRO.RSCH_ORGN_ROLE_SE
+      AND SRM.RSCR_ROLE_SE(+) = 'AB4101' /* 책임자 */
+      AND SRM.LAST_YN(+) = 'Y'
+      AND SB.SBJT_ID LIKE 'NR%'
+      <if test="erndSbjtNo != null and erndSbjtNo != ''">
+        AND SB_M.ERND_SBJT_NO LIKE '%' || #{erndSbjtNo} || '%'
+      </if>
+      <if test="irisSbjtId != null and irisSbjtId != ''">
+        AND SB_M.SBJT_NO LIKE '%' || #{irisSbjtId} || '%'
+      </if>
+      <if test="hanSbjtNm != null and hanSbjtNm != ''">
+        AND SB.HAN_SBJT_NM LIKE '%' || #{hanSbjtNm} || '%' 
+      </if>
+      <if test="spvsAgcNm != null and spvsAgcNm != ''">
+        AND SRO.RSCH_ORGN_NM LIKE '%' || #{spvsAgcNm} || '%'  
+      </if>
+      <if test="rschRpbPeRschrRegNm != null and rschRpbPeRschrRegNm != ''">
+        AND SRM.RSCR_NM LIKE '%' || #{rschRpbPeRschrRegNm} || '%'
+      </if>
+  </select>  
+    
+  <select id="retriveSbjtTrnsResultKwd" resultType="SbjtTrnsResultKwdDto" parameterType="SbjtTrnsResultKwdDto">      
+      SELECT *    /* PIVOT */
+        FROM (
+              SELECT
+                    KW.SBJT_ID                      /* 과제 ID */
+                  , KW.KWD_SE                       /* 키워드 구분[AX6] */
+                  , KW.KWD_OBJT_EXE_ANNL            /* 키워드 대상 수행 연차 */
+                  , KW.KREN_SE                      /* 한영 구분[AV4] */
+                  , KW.KWD_OR                       /* 키워드 순서 */
+                  , SK.KWD_NM                       /* 키워드 명 */
+                  , SK.LAST_YN
+                  , ROW_NUMBER() OVER(ORDER BY KW.KREN_SE, KW.KWD_OR) AS KWD_RN
+                FROM (SELECT  #{sbjtId} AS SBJT_ID
+                          , 'AX6001'  AS KWD_SE
+                          , 0         AS KWD_OBJT_EXE_ANNL /* 과제기준연차 */
+                          , 'AV4001'  AS KREN_SE /* 한글 */
+                          , LEVEL     AS KWD_OR
+                        FROM DUAL
+                    CONNECT BY LEVEL  <![CDATA[ < ]]>  6
+                      UNION ALL
+                      SELECT   #{sbjtId} AS SBJT_ID
+                          , 'AX6001'  AS KWD_SE
+                          , 0         AS KWD_OBJT_EXE_ANNL
+                          , 'AV4002'  AS KREN_SE /* 영문 */
+                          , LEVEL     AS KWD_OR
+                        FROM DUAL
+                    CONNECT BY LEVEL  <![CDATA[ < ]]>  6
+                    ) KW
+                  , PS_SBJT_KWD                      SK /* 과제 키워드 */
+              WHERE KW.KWD_SE                        = SK.KWD_SE(+)
+                AND KW.KWD_OBJT_EXE_ANNL             = SK.KWD_OBJT_EXE_ANNL(+)
+                AND KW.KREN_SE                       = SK.KREN_SE(+)
+                AND KW.KWD_OR                        = SK.KWD_OR(+)
+                AND SK.SBJT_ID(+)                    = #{sbjtId}
+                AND SK.KWD_SE(+)                     = 'AX6001' /* 과제키워드 */
+                AND SK.LAST_YN(+)                    = 'Y'
+            )
+      PIVOT (       MAX(KREN_SE)                   AS KREN_SE
+                  , MAX(KWD_OR)                    AS KWD_OR
+                  , MAX(KWD_NM)                    AS KWD_NM
+                  , MAX(LAST_YN)                   AS LAST_YN
+                FOR (KWD_RN) IN (1 AS KR_1, 2 AS KR_2, 3 AS KR_3, 4 AS KR_4, 5 AS KR_5
+                                ,6 AS EN_1, 7 AS EN_2, 8 AS EN_3, 9 AS EN_4, 10 AS EN_5 )
+            )
+  </select>  
+  
+  <select id="retriveSbjtTrnsResultItepdList" resultType="SbjtTrnsResultItepdDto" parameterType="SbjtTrnsResultItepdDto">      
+    WITH V_SRO AS (SELECT SRO.*
+                    , SAR.APPC_RGLT_CD
+                    , ROW_NUMBER() OVER(PARTITION BY SRO.SBJT_ID, SRO.SBJT_EXE_ANNL, SRO.RSCH_ORGN_ID
+                                            ORDER BY SRO.SBJT_ID, SRO.SBJT_EXE_ANNL, SRO.RSCH_ORGN_ID, SRO.PTCP_END_DE DESC, SRO.RSCH_ORGN_ROLE_SE) AS ORGN_RN
+                FROM PS_SBJT_RSCH_ORGN SRO
+                    , PS_SBJT_AGRT_RGLT SAR
+                WHERE SRO.SBJT_ID =  #{sbjtId}
+                  AND SRO.RSCH_ORGN_ROLE_SE != 'AB2105'
+                  AND SRO.LAST_YN = 'Y'
+                      /* */
+                  AND SAR.SBJT_ID = SRO.SBJT_ID
+                  AND SAR.VLID_END_DE = TO_DATE('99991231', 'YYYYMMDD')
+                  AND SAR.RGLT_GRP_CD = 'Q07' /* 비목그룹규정코드 */
+                  AND SRO.PRG_SN = SAR.GNRT_PRG_SN
+              )
+  , V_SIC AS (SELECT SIC.*
+                    , SICC.ITEPD_CD_NM
+                    , SICC.ITEPD_TP_SE /* AQ2 */
+                FROM (
+                      SELECT
+                              SIC.*
+                            , LEVEL AS LVL
+                            , ROWNUM AS RN
+                        FROM PS_STDD_ITEPD_CPST SIC
+                        START WITH SIC.ITEPD_GRP_CD IN ('G12')
+                          AND SIC.HIRK_ITEPD_CD IS NULL
+                      CONNECT BY PRIOR SIC.ITEPD_GRP_CD = SIC.ITEPD_GRP_CD
+                          AND PRIOR SIC.ITEPD_CD = SIC.HIRK_ITEPD_CD
+                        ORDER SIBLINGS BY SIC.SCRN_MARK_OR
+                      ) SIC
+                    , PS_STDD_ITEPD_CD SICC
+                WHERE SICC.ITEPD_CD = SIC.ITEPD_CD
+              )
+  , V_SRO_SIC AS (
+              SELECT SRO.SBJT_ID
+                    , SRO.SBJT_EXE_ANNL
+                    , SRO.RSCH_ORGN_ROLE_SE
+                    , SRO.RSCH_ORGN_ID
+                    , SRO.RSCH_ORGN_NM
+                      /* 비목 */
+                    , SIC.RN
+                    , SIC.LVL
+                    , SIC.ITEPD_GRP_CD
+                    , SIC.ITEPD_CD
+                    , SIC.ITEPD_CD_NM
+                    , SIC.HIRK_ITEPD_CD
+                    , SIC.ITEPD_CSRT_SE
+                    , SIC.RSCT_CROV_TP_SE
+                    , SIC.ITEPD_XUSE_TP_SE
+                    , SIC.APRB_XUSE_MIN_PT
+                    , SIC.DRWP_RANG_SE_LST
+                    , SIC.ITEPD_CHNG_SE
+                    , SIC.CHNG_BSC_ITEPD_CD_LST
+                    , SIC.SCRN_MARK_OR
+                FROM V_SRO SRO
+                    , V_SIC SIC
+                WHERE SRO.ORGN_RN = 1
+                ORDER BY SRO.SBJT_ID
+                    , SRO.SBJT_EXE_ANNL
+                    , SRO.RSCH_ORGN_ROLE_SE
+                    , SRO.RSCH_ORGN_ID
+                    , SIC.RN
+              )
+      SELECT SRO.SBJT_ID
+            , SRO.SBJT_EXE_ANNL
+            , SA.SBJT_STEP
+            , SA.SBJT_ANNL
+              /* */
+            , SRO.RSCH_ORGN_ID
+            , SRO.RSCH_ORGN_NM
+            , RSCH_ORGN_ROLE_SE
+            , (SELECT COMM_CD_NM FROM PO_COMM_CD WHERE COMM_GRP_CD = 'AB2' AND COMM_CD = RSCH_ORGN_ROLE_SE) AS RSCH_ORGN_ROLE_SE_NM
+              /* 비목 */
+            , SRO.RN
+            , SRO.LVL
+            , SRO.ITEPD_GRP_CD
+            , SRO.ITEPD_CD
+            , SRO.ITEPD_CD_NM
+            , SRO.HIRK_ITEPD_CD
+            , SRO.ITEPD_CSRT_SE
+            , SRO.RSCT_CROV_TP_SE
+            , SRO.ITEPD_XUSE_TP_SE
+            , SRO.APRB_XUSE_MIN_PT
+            , SRO.DRWP_RANG_SE_LST
+            , SRO.ITEPD_CHNG_SE
+            , SRO.CHNG_BSC_ITEPD_CD_LST
+            , SRO.SCRN_MARK_OR
+            , SRO.ITEPD_CD_NM
+              /* 협약금액 */
+            , DECODE(LVL, 1, 0, NVL(SIR.AGRT_CASH_AM / 1000, 0)) AS AGRT_CASH_AM
+            , DECODE(LVL, 1, 0, NVL(SIR.AGRT_SPOT_AM / 1000, 0)) AS AGRT_SPOT_AM
+            , DECODE(LVL, 1, 0, NVL(SIR.AGRT_NPAY_AM / 1000, 0)) AS AGRT_NPAY_AM
+              /* 한도금액 */
+            , DECODE(LVL, 1, 0, NVL(SIR.BNDS_CASH_AM / 1000, 0)) AS BNDS_CASH_AM
+            , DECODE(LVL, 1, 0, NVL(SIR.BNDS_SPOT_AM / 1000, 0)) AS BNDS_SPOT_AM
+            , DECODE(LVL, 1, 0, NVL(SIR.BNDS_NPAY_AM / 1000, 0)) AS BNDS_NPAY_AM
+            , SIR.BSC_IDCST_PT
+            , SIR.APPC_IDCST_PT
+        FROM V_SRO_SIC SRO
+            , PS_SBJT_ITEPD_RSCT SIR
+            , PS_SBJT_ANNL SA
+        WHERE SRO.SBJT_ID = SIR.SBJT_ID(+)
+          AND SRO.SBJT_EXE_ANNL = SIR.SBJT_EXE_ANNL(+)
+          AND SRO.RSCH_ORGN_ID = SIR.RSCH_ORGN_ID(+)
+          AND SRO.ITEPD_CD = SIR.ITEPD_CD(+)
+          AND SIR.LAST_YN(+) = 'Y'
+          AND SIR.HIRK_ITEPD_CD IS NOT NULL
+          AND SRO.SBJT_ID = SA.SBJT_ID
+          AND SRO.SBJT_EXE_ANNL = SA.SBJT_EXE_ANNL
+          AND SA.LAST_YN = 'Y'
+        ORDER BY SRO.SBJT_ID
+            , SA.SBJT_STEP
+            , SA.SBJT_ANNL 
+            , SRO.RSCH_ORGN_ROLE_SE
+            , SRO.RSCH_ORGN_NM
+            , SRO.RN
+  </select>  
+  <select id="retriveSbjtTrnsResultDetail" resultType="SbjtTrnsResultDetailDto" parameterType="SbjtTrnsResultDetailDto">
+    SELECT /* 공고정보 */
+            AN.ANCM_TL                      
+            /* 통합공고명-공고의 공고제목 */
+          , AN.ANCM_NO
+            /* 사업 정보 */
+          , SYB.SORGN_ID
+          , SYB.BSNS_YY                     /* 시행연도 - 사업년도 */
+          , (SELECT SO.SORGN_NM FROM PS_SORGN SO WHERE SO.SORGN_ID = SYB.SORGN_ID) AS SORGN_NM
+          , SYB.HIRK_SORGN_BSNS_CD
+          , (SELECT SYB_SUB.SORGN_BSNS_NM FROM PS_SORGN_YY_BSNS SYB_SUB WHERE SYB_SUB.BSNS_YY = SYB.BSNS_YY AND SYB_SUB.SORGN_BSNS_CD = SYB.HIRK_SORGN_BSNS_CD) AS HIRK_SORGN_BSNS_CD_NM
+          , SYB.SORGN_BSNS_CD
+          , SYB.SORGN_BSNS_NM               /* 내역사엽명 - 년도별사업의 전문기관사업명 */
+            /* 사업공고 정보 */
+          , AB.PBOFR_TP_SE                  /* 공모유형 */
+            /* 세부사업공고 정보 */
+          , ABR.BSNS_ANCM_TL                /* 사업공고명 - 접수일정의 사업공고제목 */
+          , ABP.PBOFR_FILD_NM               /* 공모분야명 - 세부공고의 공모분야명 */
+          /*, ABP.SBJT_PROPL_STRC_SE           과제 추진 체계 구분 */
+          , ABP.CORTIUM_CPST_SE             /* 컨소시엄 구성 구분 */
+          , ABP.SBJT_RCVE_FORM_SE           /* 과제 접수 형태 구분 */
+          /*, ABP.SBJT_DVLM_TP_SE              과제 개발 유형 구분 */
+          , ABP.RSCH_PRID_STNG_SE           /* 연구 기간 설정 구분 */
+          , NVL((SELECT APB.GVSTM_BNDS_AM
+                    FROM PS_ANCM_PTC_BNDS APB
+                  WHERE APB.BSNS_YY = ABP.BSNS_YY
+                    AND APB.SORGN_BSNS_CD = ABP.SORGN_BSNS_CD
+                    AND APB.BSNS_ANCM_SN = ABP.BSNS_ANCM_SN
+                    AND APB.BSNS_PTC_ANCM_SN = ABP.BSNS_PTC_ANCM_SN
+                    AND APB.SBJT_STEP = 0
+                    AND APB.SBJT_ANNL = 0
+                    AND ROWNUM = 1 ), 0)    AS TTL_GVSTM_AM /* 정부출연금한도 */
+            /* 총괄 과제 정보 */
+          , DECODE(SB.SBJT_PROPL_STRC_SE, 'AD4001', SB.SBJT_ID         , SB.OVRL_SBJT_ID    ) AS OVRL_SBJT_ID     /* 총괄 과제 ID */
+          , DECODE(SB.SBJT_PROPL_STRC_SE, 'AD4001', SB.RND_SBJT_NO     , SB_OVRL.RND_SBJT_NO) AS OVRL_RND_SBJT_NO /* 총괄 연구개발 과제 번호 */
+          , DECODE(SB.SBJT_PROPL_STRC_SE, 'AD4002', SB_OVRL.HAN_SBJT_NM, SB.HAN_OVRL_RND_NM ) AS HAN_OVRL_RND_NM  /* 한글 총괄 연구개발 명 */
+          , DECODE(SB.SBJT_PROPL_STRC_SE, 'AD4002', SB_OVRL.ENG_SBJT_NM, SB.ENG_OVRL_RND_NM ) AS ENG_OVRL_RND_NM  /* 영문 총괄 연구개발 명 */
+            /* 과제 정보 */
+          , SB.SBJT_ID                      /* 과제 ID */
+          , SB.RND_SBJT_NO                  /* 연구개발 과제 번호 */
+          , SB.HAN_SBJT_NM
+          , SB.ENG_SBJT_NM                  /* 영문 과제 명 */
+          , SB.SBJT_PROPL_STRC_SE           /* 과제구분-과제 추진 체계 구분 */
+          , SB.RCVE_PLDOC_TP_SE             /* 접수유형 - 접수 계획서 유형 구분 */
+          , SB.SBJT_DVLM_TP_SE              /* 과제 개발 유형 구분 */
+          , SB.RSCH_PRID_CPST_SE            /* 연구 기간 구성 구분 */
+            /* 진행과제 정보 */
+          , SB.PRG_SBJT_EXE_ANNL            /* 진행 과제 수행 연차 */
+          , (SELECT SA.SBJT_STEP || '-' || SA.SBJT_ANNL
+                FROM PS_SBJT_ANNL SA
+              WHERE SA.LAST_YN = 'Y'
+                AND SA.SBJT_ID = SB.SBJT_ID
+                AND SA.SBJT_EXE_ANNL = SB.PRG_SBJT_EXE_ANNL
+            ) AS PRG_SBJT_STEP_ANNL
+
+          , SB.PRG_BSNS_YY                  /* 진행 사업 년도 */
+          , SB.PRG_SORGN_BSNS_CD            /* 진행 전문기관 사업 코드 */
+          , SB.SBJT_PRG_SE                  /* 과제 진행 구분[AD3] */
+          , SB.LAST_RCVE_STT_SE             /* 최종 접수 상태 구분[AO4] */
+            /* 과제보안 */
+          , SS.SCUR_DTL_SE                  /* AG8 */
+            /* 총 개발기간 */
+          , STA.RSCH_STR_DE                 AS TOT_RSCH_STR_DE
+          , STA.RSCH_END_DE                 AS TOT_RSCH_END_DE
+          , TO_CHAR(STA.RSCH_STR_DE, 'YYYY-MM-DD') || '~' || TO_CHAR(STA.RSCH_END_DE, 'YYYY-MM-DD') AS TTL_RSCH_PRID
+          , ROUND(MONTHS_BETWEEN(STA.RSCH_END_DE, STA.RSCH_STR_DE)) AS TOT_MM_CNT
+            /* 주관기관 */
+          , SRO.RSCH_ORGN_ID
+          , SRO.RSCH_ORGN_ROLE_SE
+          , SRO.RSCH_ORGN_NM
+          , SRO.ORGN_STP_PURS_SE
+          , SRO.ORGN_TP_SE
+          , SRO.NAT_SE
+            /* 책임자 */
+          , SRM.RSCR_MBR_ID
+          , SRM.RSCR_NM
+          , SRM.NAT_SE
+          , SB.SBJT_ID AS IRIS_SBJT_ID
+          , (SELECT ERND_SBJT_NO FROM IRIS_SBJT_MAP M WHERE M.SBJT_NO = SB.SBJT_ID) AS ERND_SBJT_NO
+        FROM PS_SBJT           SB
+          , PS_ANCM_BSNS_PTC  ABP
+          , PS_ANCM_BSNS_RCVE ABR
+          , PS_ANCM_BSNS      AB
+          , PS_SORGN_YY_BSNS  SYB
+          , PS_ANCM           AN
+          , PS_SBJT           SB_OVRL       /* 총괄 연구 개발 과제 */
+          , PS_SBJT_SCUR      SS            /* 과제보안 */
+          , PS_SBJT_TOT_ANNL  STA
+          , PS_SBJT_RSCH_ORGN SRO
+          , PS_SBJT_RSCH_MBR  SRM
+      WHERE  ABP.BSNS_YY = SB.BSNS_YY
+        AND ABP.SORGN_BSNS_CD = SB.SORGN_BSNS_CD
+        AND ABP.BSNS_ANCM_SN = SB.BSNS_ANCM_SN
+        AND ABP.BSNS_PTC_ANCM_SN = SB.BSNS_PTC_ANCM_SN
+        AND ABR.BSNS_YY = ABP.BSNS_YY
+        AND ABR.SORGN_BSNS_CD = ABP.SORGN_BSNS_CD
+        AND ABR.BSNS_ANCM_SN = ABP.BSNS_ANCM_SN
+        AND ABR.ANCM_TURN = ABP.ANCM_TURN
+        AND AB.BSNS_YY = ABP.BSNS_YY
+        AND AB.SORGN_BSNS_CD = ABP.SORGN_BSNS_CD
+        AND AB.BSNS_ANCM_SN = ABP.BSNS_ANCM_SN
+        AND SYB.BSNS_YY = AB.BSNS_YY
+        AND SYB.SORGN_BSNS_CD = AB.SORGN_BSNS_CD
+        AND AN.ANCM_ID = AB.ANCM_ID
+        AND AN.ANCM_CRT_SE ='BR1001' /* 공고생성구분 : BR1001[정상공고]*/
+        AND SB_OVRL.SBJT_ID(+) = SB.OVRL_SBJT_ID
+        AND SS.SBJT_ID(+) = SB.SBJT_ID
+        AND SS.SCUR_SE(+) = 'AG6001'
+        AND SS.LAST_YN(+) = 'Y'
+        AND STA.SBJT_ID(+) = SB.SBJT_ID
+        AND STA.RND_RANG_SE(+) = 'AJ4002'
+        AND STA.SBJT_STEP(+) = 0 /* 종합연차 */
+        AND STA.LAST_YN(+) = 'Y'
+        AND SRO.SBJT_ID(+) = SB.SBJT_ID
+        AND SRO.SBJT_EXE_ANNL(+) = SB.PRG_SBJT_EXE_ANNL
+        AND SRO.RSCH_ORGN_ROLE_SE(+) = 'AB2101' /* 주관연구기관 */
+        AND SRO.LAST_YN(+) = 'Y'
+        AND SRM.SBJT_ID(+) = SRO.SBJT_ID
+        AND SRM.SBJT_EXE_ANNL(+) = SRO.SBJT_EXE_ANNL
+        AND SRM.RSCH_ORGN_ID(+) = SRO.RSCH_ORGN_ID
+        AND SRM.RSCH_ORGN_ROLE_SE(+) = SRO.RSCH_ORGN_ROLE_SE
+        AND SRM.RSCR_ROLE_SE(+) = 'AB4101' /* 책임자 */
+        AND SRM.LAST_YN(+) = 'Y'
+        AND SB.SBJT_ID = (SELECT SBJT_ID FROM PS_SBJT WHERE RND_SBJT_NO = #{rndSbjtNo})
+  </select>
+  <select id="retriveSbjtTrnsResultExcelList" resultType="SbjtTrnsResultExcelDto" parameterType="SbjtTrnsResultExcelDto">      
+    SELECT ROWNUM AS NO, A.*
+    FROM
+    (
+      SELECT  BS_M.PTC_BSNS_NAME
+            , BS_M.BRDN_BSNS_NAME
+            , (SELECT COMM_CD_NM FROM PO_COMM_CD WHERE COMM_CD = SBJT_PROPL_STRC_SE AND COMM_GRP_CD = 'AD4') AS SBJT_PROPL_STRC_SE_NM
+            , SB.BSNS_YY AS SELE_YY
+            , RND_SBJT_NO
+            , NVL(SB_M.ERND_SBJT_NO, (SELECT MAX(ERND_SBJT_NO) FROM IRIS_ANU_SBJT_MAP ANU_M WHERE ANU_M.SBJT_NO = SB_M.SBJT_NO)) AS STEP_ANU_SBJT_NO
+            , SB.HAN_SBJT_NM
+            , SRO.RSCH_ORGN_NM AS SPVS_AGC_NM
+            , SRM.RSCR_NM AS RSCH_RPB_PE_RSCHR_REG_NM
+            , BS_M.JRSD_NAME AS BIZ_DEPART_NM
+            , TO_CHAR(STA.RSCH_STR_DE, 'YYYY-MM-DD') || '~' || TO_CHAR(STA.RSCH_END_DE, 'YYYY-MM-DD') AS TOT_RSCH_DATE
+          FROM PS_SBJT SB
+              , IRIS_BSNS_CD_MAP BS_M
+              , IRIS_SBJT_MAP SB_M
+              , PS_SBJT_TOT_ANNL  STA
+              , PS_SBJT_RSCH_ORGN SRO
+              , PS_SBJT_RSCH_MBR  SRM
+        WHERE SB.SORGN_BSNS_CD = BS_M.IRIS_BSNS_CD
+          AND SB.SBJT_ID = SB_M.SBJT_NO
+          AND STA.SBJT_ID(+) = SB.SBJT_ID
+          AND STA.RND_RANG_SE(+) = 'AJ4002'
+          AND STA.SBJT_STEP(+) = 0 /* 종합연차 */
+          AND STA.LAST_YN(+) = 'Y'
+          AND SRO.SBJT_ID(+) = SB.SBJT_ID
+          AND SRO.SBJT_EXE_ANNL(+) = SB.PRG_SBJT_EXE_ANNL
+          AND SRO.RSCH_ORGN_ROLE_SE(+) = 'AB2101' /* 주관연구기관 */
+          AND SRO.LAST_YN(+) = 'Y'
+          AND SRM.SBJT_ID(+) = SRO.SBJT_ID
+          AND SRM.SBJT_EXE_ANNL(+) = SRO.SBJT_EXE_ANNL
+          AND SRM.RSCH_ORGN_ID(+) = SRO.RSCH_ORGN_ID
+          AND SRM.RSCH_ORGN_ROLE_SE(+) = SRO.RSCH_ORGN_ROLE_SE
+          AND SRM.RSCR_ROLE_SE(+) = 'AB4101' /* 책임자 */
+          AND SRM.LAST_YN(+) = 'Y'
+          AND SB.SBJT_ID LIKE 'NR%'
+          <if test="erndSbjtNo != null and erndSbjtNo != ''">
+            AND SB_M.ERND_SBJT_NO LIKE '%' || #{erndSbjtNo} || '%'
+          </if>
+          <if test="irisSbjtId != null and irisSbjtId != ''">
+            AND SB_M.SBJT_NO LIKE '%' || #{irisSbjtId} || '%'
+          </if>
+          <if test="hanSbjtNm != null and hanSbjtNm != ''">
+            AND SB.HAN_SBJT_NM LIKE '%' || #{hanSbjtNm} || '%' 
+          </if>
+          <if test="spvsAgcNm != null and spvsAgcNm != ''">
+            AND SRO.RSCH_ORGN_NM LIKE '%' || #{spvsAgcNm} || '%'  
+          </if>
+          <if test="rschRpbPeRschrRegNm != null and rschRpbPeRschrRegNm != ''">
+            AND SRM.RSCR_NM LIKE '%' || #{rschRpbPeRschrRegNm} || '%'
+          </if>
+          ORDER BY RSCH_END_DE DESC
+    ) A
+  </select>  
+  
+</mapper>

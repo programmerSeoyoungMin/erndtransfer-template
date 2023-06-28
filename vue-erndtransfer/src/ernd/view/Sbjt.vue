@@ -30,7 +30,7 @@
 
         <el-col :span="9">
           <el-form-item label-width="180px" label="과제상태">
-            <el-select v-model="sbjtStts" placeholder="Select">
+            <el-select v-model="sbjtStts" placeholder="전체">
               <el-option
                 v-for="item in options"
                 :key="item.sbjtStts"
@@ -68,10 +68,7 @@
       @onRowLimitSelect="setRowLimit"
       @onDataMapBtnClick="dataMapBtnClick"
       @onExcelDownloadClick="excelDownloadClick"
-    >
-      <!-- el-table-column 수동 추가를 원하면 아래 slot 안에 적용 -->
-      <template v-slot:rows />
-    </grid>
+    />
     <!-- selected row 확인용 -->
     <!--selected row : {{ selectedRow }}-->
 
@@ -99,29 +96,29 @@ export default {
         total: 1
       },
       listLoading: false,
-      headers: [{ key: 'no', name: '순번', width: '80' },
-        { key: 'sbjtStts', name: '과제상태', width: '125' },
-        { key: 'erndSbjtNo', name: 'ERND과제번호', width: '300' },
-        { key: 'erndFlfmtYy', name: '수행년도', width: '125' },
-        { key: 'erndsbjtNm', name: 'ERND과제명', width: '575' },
-        { key: 'irisFlfmtYy', name: 'IRIS사업년도', width: '125' },
-        { key: 'irisSbjtNo', name: 'IRIS과제번호', width: '300' }
+      headers: [{ key: 'no', name: '순번', width: '80', align: 'center' },
+        { key: 'sbjtStts', name: '과제상태', width: '125', align: 'center' },
+        { key: 'erndSbjtNo', name: 'ERND과제번호', width: '200', align: 'center' },
+        { key: 'erndFlfmtYy', name: '수행년도', width: '125', align: 'center' },
+        { key: 'sbjtNm', name: 'ERND과제명', width: '875' },
+        { key: 'irisFlfmtYy', name: 'IRIS사업년도', width: '125', align: 'center' },
+        { key: 'irisSbjtNo', name: 'IRIS과제번호', width: '200', align: 'center' }
       ],
       dataList: [],
       sbjtSearchForm: {
         erndSbjtNo: '',
         irisSbjtNo: '',
-        erndFlfmtYy: ''
+        erndFlfmtYy: '',
+        sbjtStts: ''
       },
       selectedRow: null,
       options: [{
-        sbjtStts: 'B',
+        sbjtStts: '00001',
         label: '진행중'
       }, {
-        sbjtStts: 'C',
+        sbjtStts: '00002',
         label: '종료'
-      }],
-      sbjtStts: '전체'
+      }]
     }
   },
   mounted() {
@@ -137,7 +134,6 @@ export default {
       searchParams.erndFlfmtYy = new Date(this.sbjtSearchForm.erndFlfmtYy).getFullYear() + ''
       searchParams.currentPage = this.pager.currentPage
       searchParams.limit = this.pager.limit
-
       Axios.post('http://localhost:8080/sbjt/retriveSbjtList', searchParams)
         .then(response => {
           this.dataList = response.data.sbjtList
@@ -149,7 +145,6 @@ export default {
         .finally(() => {
           this.listLoading = false
         })
-      this.$alert('current page = ' + this.pager.currentPage + ', row limit = ' + this.pager.limit, '검색')
     },
     setRowLimit(val) {
       if (val !== undefined) this.pager.limit = val
@@ -158,9 +153,14 @@ export default {
       )
       this.search()
     },
-    dataMapBtnClick(row) {
-      this.selectedRow = row
-      console.log(this.selectedRow)
+    dataMapBtnClick() {
+      const confirm = this.$confirm('데이터 정제 하시겠습니까?')
+      if (confirm) {
+        Axios.post('http://localhost:8080/sbjt/insertSbjtMappingData')
+          .catch(error => {
+            console.log(error)
+          })
+      }
     },
     excelDownloadClick() {
       const downloadUrl = 'http://localhost:8080/excel/download'
