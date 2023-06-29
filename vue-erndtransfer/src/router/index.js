@@ -13,7 +13,7 @@ import Layout from '@/layout'
 // import nestedRouter from './modules/nested'
 // import templateRouter from './modules/templates'
 // import permissionRouter from './modules/permission'
-import erndRouter from './ernd'
+// import erndRouter from './ernd'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -73,24 +73,24 @@ export const constantRoutes = [
     component: () => import('@/views/error-page/401'),
     hidden: true
   },
+  // {
+  //   path: '/',
+  //   component: Layout,
+  //   redirect: '/dashboard',
+  //   children: [
+  //     {
+  //       path: 'dashboard',
+  //       component: () => import('@/views/dashboard/index'),
+  //       name: 'Dashboard',
+  //       meta: { title: 'Dashboard', icon: 'dashboard', affix: true }
+  //     }
+  //   ]
+  // },
+  // ernd dashboard
   {
     path: '/',
     component: Layout,
     redirect: '/dashboard',
-    children: [
-      {
-        path: 'dashboard',
-        component: () => import('@/views/dashboard/index'),
-        name: 'Dashboard',
-        meta: { title: 'Dashboard', icon: 'dashboard', affix: true }
-      }
-    ]
-  },
-  // ernd dashboard
-  {
-    path: '/ernd/main',
-    component: Layout,
-    redirect: '/ernd/main',
     children: [
       {
         path: 'dashboard',
@@ -125,20 +125,20 @@ export const constantRoutes = [
   //     }
   //   ]
   // },
-  {
-    path: '/profile',
-    component: Layout,
-    redirect: '/profile/index',
-    hidden: true,
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/profile/index'),
-        name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
-      }
-    ]
-  },
+  // {
+  //   path: '/profile',
+  //   component: Layout,
+  //   redirect: '/profile/index',
+  //   hidden: true,
+  //   children: [
+  //     {
+  //       path: 'index',
+  //       component: () => import('@/views/profile/index'),
+  //       name: 'Profile',
+  //       meta: { title: 'Profile', icon: 'user', noCache: true }
+  //     }
+  //   ]
+  // },
   {
     path: '/demo',
     component: Layout,
@@ -159,18 +159,18 @@ export const constantRoutes = [
  * the routes that need to be dynamically loaded based on user roles
  */
 export const asyncRoutes = [
-  {
-    path: '/icon',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/icons/index'),
-        name: 'Icons',
-        meta: { title: 'Icons', icon: 'icon', noCache: true }
-      }
-    ]
-  },
+  // {
+  //   path: '/icon',
+  //   component: Layout,
+  //   children: [
+  //     {
+  //       path: 'index',
+  //       component: () => import('@/views/icons/index'),
+  //       name: 'Icons',
+  //       meta: { title: 'Icons', icon: 'icon', noCache: true }
+  //     }
+  //   ]
+  // },
   /** when your routing map is too long, you can split it into small modules **/
   // permissionRouter,
   // componentsRouter,
@@ -178,7 +178,80 @@ export const asyncRoutes = [
   // nestedRouter,
   // tableRouter,
   // templateRouter,
-  erndRouter,
+  {
+    path: '/mapping',
+    name: '데이터 정제',
+    component: Layout,
+    meta: { title: '데이터 정제', icon: 'folder-solid', noCache: true },
+    redirect: '/ernd/bsns',
+    children: [
+      {
+        path: 'bsns',
+        component: () => import('@/ernd/view/Bsns'),
+        name: '사업',
+        meta: { title: '사업', icon: 'briefcase-solid', noCache: true }
+      },
+      {
+        path: 'itepd',
+        component: () => import('@/ernd/view/Itepd'),
+        name: '비목',
+        meta: { title: '비목', icon: 'file-invoice-solid', noCache: true }
+      },
+      {
+        path: 'ancm',
+        component: () => import('@/ernd/view/Ancm'),
+        name: '공고',
+        meta: { title: '공고', icon: 'briefcase-solid', noCache: true }
+      },
+      {
+        path: 'sbjt',
+        component: () => import('@/ernd/view/Sbjt'),
+        name: '과제',
+        meta: { title: '과제', icon: 'briefcase-solid', noCache: true }
+      }
+    ]
+  },
+  {
+    path: '/trns',
+    name: '데이터 이관',
+    component: Layout,
+    meta: { title: '데이터 이관', icon: 'folder-solid', noCache: true },
+    children: [
+      {
+        path: 'all',
+        component: () => import('@/ernd/view/TrnsAll'),
+        name: '전체 이관',
+        meta: { title: '전체 이관', icon: 'database-solid', noCache: true }
+      },
+      {
+        path: 'each',
+        component: () => import('@/ernd/view/TrnsEach'),
+        name: '개별 이관',
+        meta: { title: '개별이관(과제별)', icon: 'share-from-square-solid', noCache: true }
+      }
+    ]
+  },
+  {
+    path: '/result',
+    name: '데이터 이관결과',
+    component: Layout,
+    meta: { title: '데이터 이관결과', icon: 'folder-solid', noCache: true },
+    children: [
+      {
+        path: 'dataTrnsfRslt',
+        component: () => import('@/ernd/view/DataTrnsfRslt'),
+        name: '이관 진행 결과',
+        meta: { title: '이관 진행 결과', icon: 'magnifying-glass-solid', noCache: true }
+      },
+      {
+        path: 'inquiry',
+        component: () => import('@/ernd/view/ResultInq'),
+        name: '이관결과 미리보기',
+        meta: { title: '이관결과 미리보기', icon: 'magnifying-glass-solid', noCache: true }
+      }
+    ]
+  },
+  // erndRouter,
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
 ]

@@ -3,6 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=vuejs,visualstudiocode
 
 ### Maven ###
+static/
 target/
 pom.xml.tag
 pom.xml.releaseBackup
